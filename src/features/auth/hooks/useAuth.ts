@@ -1,24 +1,15 @@
-import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../app/store';
-import {
-  setUser,
-  setIsFetching,
-  setError,
-  logout
-} from '../state/authSlice';
-import {
-  register,
-  login,
-  forgotPassword,
-  resetPassword
-} from '../core/_requests';
+import { useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../../app/store";
+import { setUser, setIsFetching, setError, logout } from "../state/authSlice";
 import {
   RegisterUserRequest,
   LoginRequest,
   ForgotPasswordRequest,
-  ResetPasswordRequest
-} from '../core/_models';
+  ResetPasswordRequest,
+} from "../core/_models";
+import { useNavigate } from "react-router-dom";
+import { authApi } from "../api/authApi";
 
 interface AuthState {
   user: {
@@ -35,97 +26,86 @@ interface AuthState {
 
 export const useAuth = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user, isAuthenticated, isFetching, error } = useSelector(
     (state: RootState) => state.auth as AuthState
   );
 
-  const registerUser = useCallback(
-    async (request: RegisterUserRequest) => {
-      try {
-        dispatch(setIsFetching(true));
-        const response = await register(request);
-        dispatch(setUser(response));
-        dispatch(setError(null));
-        return response;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-        dispatch(setError(errorMessage));
-        throw err;
-      } finally {
-        dispatch(setIsFetching(false));
-      }
-    },
-    [dispatch]
-  );
+  const handleRegister = async (data: RegisterUserRequest) => {
+    try {
+      dispatch(setIsFetching(true));
+      const response = await authApi.register(data);
+      dispatch(setUser(response));
+      localStorage.setItem("token", response.token);
+      navigate("/syllabus");
+    } catch (error: any) {
+      dispatch(
+        setError(error.response?.data?.message || "Registration failed")
+      );
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
+  };
 
-  const loginUser = useCallback(
-    async (request: LoginRequest) => {
-      try {
-        dispatch(setIsFetching(true));
-        const response = await login(request);
-        dispatch(setUser(response));
-        dispatch(setError(null));
-        return response;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Login failed';
-        dispatch(setError(errorMessage));
-        throw err;
-      } finally {
-        dispatch(setIsFetching(false));
-      }
-    },
-    [dispatch]
-  );
+  const handleLogin = async (data: LoginRequest) => {
+    try {
+      dispatch(setIsFetching(true));
+      const response = await authApi.login(data);
+      dispatch(setUser(response));
+      localStorage.setItem("token", response.token);
+      navigate("/syllabus");
+    } catch (error: any) {
+      dispatch(setError(error.response?.data?.message || "Login failed"));
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
+  };
 
-  const handleForgotPassword = useCallback(
-    async (request: ForgotPasswordRequest) => {
-      try {
-        dispatch(setIsFetching(true));
-        const response = await forgotPassword(request);
-        dispatch(setError(null));
-        return response;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to process forgot password request';
-        dispatch(setError(errorMessage));
-        throw err;
-      } finally {
-        dispatch(setIsFetching(false));
-      }
-    },
-    [dispatch]
-  );
-
-  const handleResetPassword = useCallback(
-    async (request: ResetPasswordRequest) => {
-      try {
-        dispatch(setIsFetching(true));
-        const response = await resetPassword(request);
-        dispatch(setError(null));
-        return response;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to reset password';
-        dispatch(setError(errorMessage));
-        throw err;
-      } finally {
-        dispatch(setIsFetching(false));
-      }
-    },
-    [dispatch]
-  );
-
-  const logoutUser = useCallback(() => {
+  const handleLogout = () => {
     dispatch(logout());
-  }, [dispatch]);
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  const handleForgotPassword = async (data: ForgotPasswordRequest) => {
+    try {
+      dispatch(setIsFetching(true));
+      await authApi.forgotPassword(data);
+    } catch (error: any) {
+      dispatch(
+        setError(error.response?.data?.message || "Failed to send reset email")
+      );
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
+  };
+
+  const handleResetPassword = async (data: ResetPasswordRequest) => {
+    try {
+      dispatch(setIsFetching(true));
+      await authApi.resetPassword(data);
+    } catch (error: any) {
+      dispatch(
+        setError(error.response?.data?.message || "Failed to reset password")
+      );
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
+  };
 
   return {
     user,
     isAuthenticated,
     isFetching,
     error,
-    registerUser,
-    loginUser,
+    handleRegister,
+    handleLogin,
+    handleLogout,
     handleForgotPassword,
     handleResetPassword,
-    logoutUser
   };
-}; 
+};

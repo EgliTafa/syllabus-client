@@ -15,7 +15,7 @@ import { useAuth } from '../hooks/useAuth';
 export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginUser, isFetching, error } = useAuth();
+  const { handleLogin, isFetching, error } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -32,10 +32,7 @@ export const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginUser(formData);
-      // Redirect to the page they tried to visit or home
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      await handleLogin(formData);
     } catch (error) {
       // Error is handled by the auth hook
     }
@@ -61,6 +58,12 @@ export const Login = () => {
         <Typography variant="h4" component="h1" gutterBottom align="center">
           Login
         </Typography>
+
+        {location.state?.message && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {location.state.message}
+          </Alert>
+        )}
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -102,20 +105,33 @@ export const Login = () => {
         </form>
 
         <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Link
-            component={RouterLink}
-            to="/forgot-password"
-            variant="body2"
-          >
-            Forgot password?
-          </Link>
-        </Box>
-
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="body2">
             Don't have an account?{' '}
-            <Link component={RouterLink} to="/register">
+            <Link 
+              component={RouterLink} 
+              to="/register"
+              sx={{ 
+                color: 'primary.main',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
               Register
+            </Link>
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            <Link 
+              component={RouterLink} 
+              to="/forgot-password"
+              sx={{ 
+                color: 'primary.main',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              Forgot Password?
             </Link>
           </Typography>
         </Box>
