@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { store } from './store';
+import config from './config';
 
 // Create axios instance
 const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '',
+  baseURL: config.apiUrl,
   headers: {
     'Content-Type': 'application/json',
   },

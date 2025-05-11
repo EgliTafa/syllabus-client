@@ -5,7 +5,7 @@ export interface Topic {
 }
 
 export interface Course {
-  id: number;
+    id: number;
   title: string;
   code: string;
   semester: number;
@@ -28,34 +28,34 @@ export interface Course {
 }
 
 export interface Syllabus {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
   courses: Course[];
-}
-
+  }
+  
 export interface CreateSyllabusRequest {
-  name: string;
+    name: string;
   courses: CreateCourseRequest[];
-}
-
+  }
+  
 export interface CreateCourseRequest {
   title: string;
   code: string;
   semester: number;
   credits: number;
   // Add other fields as needed
-}
-
+  }
+  
 export interface UpdateSyllabusRequest {
-  syllabusId: number;
-  name: string;
-}
-
+    syllabusId: number;
+    name: string;
+  }
+  
 export interface AddOrRemoveCoursesFromSyllabusRequest {
-  syllabusId: number;
-  courseIdsToAdd: number[];
-  courseIdsToRemove: number[];
-}
+    syllabusId: number;
+    courseIdsToAdd: number[];
+    courseIdsToRemove: number[];
+  }
 
 export interface ListAllSyllabusesResponse {
   syllabuses: Syllabus[];
