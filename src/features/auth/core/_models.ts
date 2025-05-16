@@ -14,6 +14,7 @@ export interface RegisterUserResponse {
   lastName: string;
   email: string;
   token: string;
+  roles: UserRole[];
 }
 
 export interface LoginRequest {
@@ -27,6 +28,7 @@ export interface LoginResponse {
   lastName: string;
   email: string;
   token: string;
+  roles: UserRole[];
 }
 
 export interface ForgotPasswordRequest {
@@ -47,10 +49,17 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
+export enum UserRole {
+  Student = 'Student',
+  Professor = 'Professor',
+  Administrator = 'Administrator'
+}
+
 export interface User {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   token: string;
+  roles: UserRole[];
 } 

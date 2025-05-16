@@ -7,6 +7,7 @@ import {
   LoginRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  UserRole,
 } from "../core/_models";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
@@ -18,6 +19,7 @@ interface AuthState {
     lastName: string;
     email: string;
     token: string;
+    roles?: UserRole[];
   } | null;
   isAuthenticated: boolean;
   isFetching: boolean;
@@ -97,6 +99,22 @@ export const useAuth = () => {
     }
   };
 
+  const hasRole = (role: UserRole): boolean => {
+    return user?.roles?.includes(role) ?? false;
+  };
+
+  const hasAnyRole = (roles: UserRole[]): boolean => {
+    return roles.some(role => hasRole(role));
+  };
+
+  const hasAllRoles = (roles: UserRole[]): boolean => {
+    return roles.every(role => hasRole(role));
+  };
+
+  const isAdmin = (): boolean => hasRole(UserRole.Administrator);
+  const isProfessor = (): boolean => hasRole(UserRole.Professor);
+  const isStudent = (): boolean => hasRole(UserRole.Student);
+
   return {
     user,
     isAuthenticated,
@@ -107,5 +125,11 @@ export const useAuth = () => {
     handleLogout,
     handleForgotPassword,
     handleResetPassword,
+    hasRole,
+    hasAnyRole,
+    hasAllRoles,
+    isAdmin,
+    isProfessor,
+    isStudent
   };
 };
