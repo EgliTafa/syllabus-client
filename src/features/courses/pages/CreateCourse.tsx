@@ -27,7 +27,33 @@ export const CreateCourse = () => {
     credits: '',
     evaluation: EvaluationMethod.Exam,
     type: CourseType.Mandatory,
-    syllabusId: ''
+    syllabusId: '',
+    academicProgram: '',
+    academicYear: '',
+    language: '',
+    courseTypeLabel: '',
+    ethicsCode: '',
+    examMethod: '',
+    teachingFormat: '',
+    detailCredits: '',
+    objective: '',
+    keyConcepts: '',
+    prerequisites: '',
+    skillsAcquired: '',
+    courseResponsible: '',
+    literature: '',
+    tpLectureHours: '',
+    tpLabHours: '',
+    tpPracticeHours: '',
+    tpExerciseHours: '',
+    tpWeeklyHours: '',
+    tpIndividualStudyHours: '',
+    ebParticipation: '',
+    ebTest1: '',
+    ebTest2: '',
+    ebTest3: '',
+    ebFinalExam: '',
+    topics: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,6 +257,45 @@ export const CreateCourse = () => {
                 ))}
               </TextField>
             </Grid>
+
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Course Details</Typography>
+              <TextField fullWidth label="Academic Program" name="academicProgram" value={formData.academicProgram} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Academic Year" name="academicYear" value={formData.academicYear} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Language" name="language" value={formData.language} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Course Type Label" name="courseTypeLabel" value={formData.courseTypeLabel} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Ethics Code" name="ethicsCode" value={formData.ethicsCode} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Exam Method" name="examMethod" value={formData.examMethod} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Teaching Format" name="teachingFormat" value={formData.teachingFormat} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Credits (Detail)" name="detailCredits" type="number" value={formData.detailCredits} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Objective" name="objective" value={formData.objective} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Key Concepts" name="keyConcepts" value={formData.keyConcepts} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Prerequisites" name="prerequisites" value={formData.prerequisites} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Skills Acquired" name="skillsAcquired" value={formData.skillsAcquired} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Course Responsible" name="courseResponsible" value={formData.courseResponsible} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Literature (Backend support coming soon)" name="literature" value={formData.literature} onChange={handleChange} margin="normal" />
+            </Box>
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="subtitle1" sx={{ mt: 2 }}>Teaching Plan</Typography>
+              <TextField fullWidth label="Lecture Hours" name="tpLectureHours" type="number" value={formData.tpLectureHours} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Lab Hours" name="tpLabHours" type="number" value={formData.tpLabHours} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Practice Hours" name="tpPracticeHours" type="number" value={formData.tpPracticeHours} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Exercise Hours" name="tpExerciseHours" type="number" value={formData.tpExerciseHours} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Weekly Hours" name="tpWeeklyHours" type="number" value={formData.tpWeeklyHours} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Individual Study Hours" name="tpIndividualStudyHours" type="number" value={formData.tpIndividualStudyHours} onChange={handleChange} margin="normal" />
+            </Box>
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="subtitle1" sx={{ mt: 2 }}>Evaluation Breakdown</Typography>
+              <TextField fullWidth label="Participation %" name="ebParticipation" type="number" value={formData.ebParticipation} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Test 1 %" name="ebTest1" type="number" value={formData.ebTest1} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Test 2 %" name="ebTest2" type="number" value={formData.ebTest2} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Test 3 %" name="ebTest3" type="number" value={formData.ebTest3} onChange={handleChange} margin="normal" />
+              <TextField fullWidth label="Final Exam %" name="ebFinalExam" type="number" value={formData.ebFinalExam} onChange={handleChange} margin="normal" />
+            </Box>
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="subtitle1" sx={{ mt: 2 }}>Topics</Typography>
+              <TextField fullWidth label="Topics (comma separated)" name="topics" value={formData.topics} onChange={handleChange} margin="normal" />
+            </Box>
 
             <Grid 
               sx={{

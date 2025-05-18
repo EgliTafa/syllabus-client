@@ -10,12 +10,16 @@ export interface Course {
   code: string;
   semester: number;
   credits: number;
+  lectureHours: number;
+  seminarHours: number;
+  labHours: number;
+  practiceHours: number;
+  courseTypeLabel?: string;
+  examMethod?: string;
   academicProgram?: string;
   academicYear?: string;
   language?: string;
-  courseTypeLabel?: string;
   ethicsCode?: string;
-  examMethod?: string;
   teachingFormat?: string;
   teachingPlan?: any; // TODO: Define proper type
   evaluationBreakdown?: any; // TODO: Define proper type
@@ -43,6 +47,12 @@ export interface CreateCourseRequest {
   code: string;
   semester: number;
   credits: number;
+  lectureHours: number;
+  seminarHours: number;
+  labHours: number;
+  practiceHours: number;
+  courseTypeLabel?: string;
+  examMethod?: string;
   // Add other fields as needed
   }
   

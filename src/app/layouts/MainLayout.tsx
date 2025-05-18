@@ -9,7 +9,7 @@ import { useAuth } from '../../features/auth/hooks/useAuth';
 export const MainLayout = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const { handleLogout } = useAuth();
+  const { handleLogout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -67,6 +67,15 @@ export const MainLayout = () => {
               >
                 Courses
               </Button>
+              {isAdmin() && (
+                <Button
+                  color="inherit"
+                  component={RouterLink}
+                  to="/admin/roles"
+                >
+                  Admin Role Assignment
+                </Button>
+              )}
               <IconButton
                 size="large"
                 aria-label="account of current user"

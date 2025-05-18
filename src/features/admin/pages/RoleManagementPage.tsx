@@ -16,6 +16,8 @@ import {
 import { UserRole } from '../../auth/core/_models';
 import { roleManagementApi } from '../api/roleManagementApi';
 
+const ALL_ROLES = [UserRole.Administrator, UserRole.Professor, UserRole.Student];
+
 export const RoleManagementPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [userId, setUserId] = useState('');
@@ -34,7 +36,7 @@ export const RoleManagementPage: React.FC = () => {
       setSuccess(`Found user: ${response.email}`);
       // Get user roles
       const rolesResponse = await roleManagementApi.getUserRoles(response.userId);
-      setRoles(rolesResponse.roles || []);
+      setRoles(rolesResponse || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to find user');
       setUserId('');
@@ -51,8 +53,8 @@ export const RoleManagementPage: React.FC = () => {
       await roleManagementApi.assignRole({ userId, role });
       setSuccess(`Successfully assigned ${role} role`);
       // Refresh roles
-      const response = await roleManagementApi.getUserRoles(userId);
-      setRoles(response.roles || []);
+      const rolesResponse = await roleManagementApi.getUserRoles(userId);
+      setRoles(rolesResponse || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to assign role');
     }
@@ -65,8 +67,8 @@ export const RoleManagementPage: React.FC = () => {
       await roleManagementApi.removeRole({ userId, role });
       setSuccess(`Successfully removed ${role} role`);
       // Refresh roles
-      const response = await roleManagementApi.getUserRoles(userId);
-      setRoles(response.roles || []);
+      const rolesResponse = await roleManagementApi.getUserRoles(userId);
+      setRoles(rolesResponse || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to remove role');
     }
@@ -104,23 +106,33 @@ export const RoleManagementPage: React.FC = () => {
               {isLoading ? <CircularProgress size={24} /> : 'Lookup User'}
             </Button>
           </Box>
+          {userId && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body1">User ID: <b>{userId}</b></Typography>
+              <Typography variant="body1">Email: <b>{email}</b></Typography>
+            </Box>
+          )}
         </Paper>
 
         {userId && (
           <>
             <Paper sx={{ p: 3, mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Assign Administrator Role
+                Assign/Remove Roles
               </Typography>
-              <Box sx={{ mb: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleAssignRole(UserRole.Administrator)}
-                  disabled={hasRole(UserRole.Administrator)}
-                >
-                  Assign Administrator Role
-                </Button>
+              <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
+                {ALL_ROLES.map((role) => (
+                  <Button
+                    key={role}
+                    variant={hasRole(role) ? 'outlined' : 'contained'}
+                    color={hasRole(role) ? 'error' : 'primary'}
+                    onClick={() => hasRole(role) ? handleRemoveRole(role) : handleAssignRole(role)}
+                    disabled={isLoading}
+                    sx={{ minWidth: 180 }}
+                  >
+                    {hasRole(role) ? `Remove ${role}` : `Assign ${role}`}
+                  </Button>
+                ))}
               </Box>
             </Paper>
 
@@ -129,16 +141,15 @@ export const RoleManagementPage: React.FC = () => {
                 Current User Roles
               </Typography>
               <List>
-                {Array.isArray(roles) && roles.map((role) => (
+                {Array.isArray(roles) && roles.length > 0 ? roles.map((role) => (
                   <ListItem key={role}>
                     <ListItemText primary={role} />
-                    <Chip
-                      label="Remove"
-                      color="error"
-                      onClick={() => handleRemoveRole(role)}
-                    />
                   </ListItem>
-                ))}
+                )) : (
+                  <ListItem>
+                    <ListItemText primary="No roles assigned." />
+                  </ListItem>
+                )}
               </List>
             </Paper>
           </>
