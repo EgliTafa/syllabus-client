@@ -220,25 +220,32 @@ export const SyllabusDetails = () => {
           </Box>
         ))}
 
-        <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Box sx={{ 
+          mt: 4, 
+          p: 2, 
+          bgcolor: 'background.paper',
+          borderRadius: 1,
+          border: 1,
+          borderColor: 'divider'
+        }}>
           <Typography variant="h6" gutterBottom>
-            Legjenda
+            Legend
           </Typography>
           <Grid container spacing={2}>
             <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-              <Typography variant="body2">
-                • Lëndët bazë shënohen me (B)
+              <Typography variant="body2" color="text.secondary">
+                • Basic courses are marked with (B)
               </Typography>
-              <Typography variant="body2">
-                • Lëndët me zgjedhje shënohen me (C)
+              <Typography variant="body2" color="text.secondary">
+                • Elective courses are marked with (C)
               </Typography>
-              <Typography variant="body2">
-                • Lëndët e lira shënohen me (E)
+              <Typography variant="body2" color="text.secondary">
+                • Optional courses are marked with (E)
               </Typography>
             </Grid>
             <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-              <Typography variant="body2">
-                • Mënyra e vlerësimit: Provim (P), Vrojtim (V), Frekuentim (F)
+              <Typography variant="body2" color="text.secondary">
+                • Evaluation Methods: Exam (P), Observation (V), Attendance (F)
               </Typography>
             </Grid>
           </Grid>

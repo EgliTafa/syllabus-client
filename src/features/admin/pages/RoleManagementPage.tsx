@@ -81,12 +81,12 @@ export const RoleManagementPage: React.FC = () => {
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant="h4" component="h1" gutterBottom color="text.primary">
           Role Management
         </Typography>
 
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
+        <Paper sx={{ p: 3, mb: 3, bgcolor: 'background.paper' }}>
+          <Typography variant="h6" gutterBottom color="text.primary">
             Lookup User
           </Typography>
           <Box sx={{ mb: 2 }}>
@@ -96,6 +96,7 @@ export const RoleManagementPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{ mb: 2 }}
+              color="primary"
             />
             <Button
               variant="contained"
@@ -108,19 +109,19 @@ export const RoleManagementPage: React.FC = () => {
           </Box>
           {userId && (
             <Box sx={{ mt: 2 }}>
-              <Typography variant="body1">User ID: <b>{userId}</b></Typography>
-              <Typography variant="body1">Email: <b>{email}</b></Typography>
+              <Typography variant="body1" color="text.primary">User ID: <b>{userId}</b></Typography>
+              <Typography variant="body1" color="text.primary">Email: <b>{email}</b></Typography>
             </Box>
           )}
         </Paper>
 
         {userId && (
           <>
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
+            <Paper sx={{ p: 3, mb: 3, bgcolor: 'background.paper' }}>
+              <Typography variant="h6" gutterBottom color="text.primary">
                 Assign/Remove Roles
               </Typography>
-              <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
+              <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 {ALL_ROLES.map((role) => (
                   <Button
                     key={role}
@@ -128,7 +129,12 @@ export const RoleManagementPage: React.FC = () => {
                     color={hasRole(role) ? 'error' : 'primary'}
                     onClick={() => hasRole(role) ? handleRemoveRole(role) : handleAssignRole(role)}
                     disabled={isLoading}
-                    sx={{ minWidth: 180 }}
+                    sx={{ 
+                      minWidth: 180,
+                      '&:hover': {
+                        bgcolor: hasRole(role) ? 'error.dark' : 'primary.dark'
+                      }
+                    }}
                   >
                     {hasRole(role) ? `Remove ${role}` : `Assign ${role}`}
                   </Button>
@@ -136,18 +142,24 @@ export const RoleManagementPage: React.FC = () => {
               </Box>
             </Paper>
 
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
+            <Paper sx={{ p: 3, bgcolor: 'background.paper' }}>
+              <Typography variant="h6" gutterBottom color="text.primary">
                 Current User Roles
               </Typography>
               <List>
                 {Array.isArray(roles) && roles.length > 0 ? roles.map((role) => (
                   <ListItem key={role}>
-                    <ListItemText primary={role} />
+                    <ListItemText 
+                      primary={role} 
+                      primaryTypographyProps={{ color: 'text.primary' }}
+                    />
                   </ListItem>
                 )) : (
                   <ListItem>
-                    <ListItemText primary="No roles assigned." />
+                    <ListItemText 
+                      primary="No roles assigned." 
+                      primaryTypographyProps={{ color: 'text.secondary' }}
+                    />
                   </ListItem>
                 )}
               </List>
