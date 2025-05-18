@@ -26,17 +26,32 @@ export const CreateSyllabus = () => {
     title: '',
     code: '',
     semester: 1,
-    credits: 0
+    credits: 0,
+    lectureHours: 0,
+    seminarHours: 0,
+    labHours: 0,
+    practiceHours: 0,
+    courseTypeLabel: 'B',
+    examMethod: 'P',
   });
 
   const handleAddCourse = () => {
     if (newCourse.title && newCourse.code) {
-      setCourses([...courses, { ...newCourse }]);
+      setCourses([
+        ...courses,
+        { ...newCourse }
+      ]);
       setNewCourse({
         title: '',
         code: '',
         semester: 1,
-        credits: 0
+        credits: 0,
+        lectureHours: 0,
+        seminarHours: 0,
+        labHours: 0,
+        practiceHours: 0,
+        courseTypeLabel: 'B',
+        examMethod: 'P',
       });
     }
   };
@@ -49,9 +64,22 @@ export const CreateSyllabus = () => {
   const handleSubmit = async () => {
     if (!name || courses.length === 0) return;
 
+    // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
+    const mappedCourses = courses.map((course) => {
+      const { practiceHours, courseTypeLabel, examMethod, ...rest } = course;
+      return {
+        ...rest,
+        detail: {
+          practiceHours,
+          courseTypeLabel,
+          examMethod
+        }
+      };
+    });
+
     const syllabusData: CreateSyllabusRequest = {
       name,
-      courses
+      courses: mappedCourses as any
     };
 
     // TODO: Implement API call to create syllabus
@@ -117,6 +145,64 @@ export const CreateSyllabus = () => {
             margin="normal"
             fullWidth
           />
+          <TextField
+            label="Lecture Hours"
+            type="number"
+            value={newCourse.lectureHours}
+            onChange={(e) => setNewCourse({ ...newCourse, lectureHours: parseInt(e.target.value) })}
+            margin="normal"
+            fullWidth
+          />
+          <TextField
+            label="Seminar Hours"
+            type="number"
+            value={newCourse.seminarHours}
+            onChange={(e) => setNewCourse({ ...newCourse, seminarHours: parseInt(e.target.value) })}
+            margin="normal"
+            fullWidth
+          />
+          <TextField
+            label="Lab Hours"
+            type="number"
+            value={newCourse.labHours}
+            onChange={(e) => setNewCourse({ ...newCourse, labHours: parseInt(e.target.value) })}
+            margin="normal"
+            fullWidth
+          />
+          <TextField
+            label="Practice Hours"
+            type="number"
+            value={newCourse.practiceHours}
+            onChange={(e) => setNewCourse({ ...newCourse, practiceHours: parseInt(e.target.value) })}
+            margin="normal"
+            fullWidth
+          />
+          <TextField
+            select
+            label="Course Type (Tipi)"
+            value={newCourse.courseTypeLabel}
+            onChange={(e) => setNewCourse({ ...newCourse, courseTypeLabel: e.target.value })}
+            margin="normal"
+            fullWidth
+            SelectProps={{ native: true }}
+          >
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="E">E</option>
+          </TextField>
+          <TextField
+            select
+            label="Exam Method (Mënyra e Vlerësimit)"
+            value={newCourse.examMethod}
+            onChange={(e) => setNewCourse({ ...newCourse, examMethod: e.target.value })}
+            margin="normal"
+            fullWidth
+            SelectProps={{ native: true }}
+          >
+            <option value="P">P</option>
+            <option value="V">V</option>
+            <option value="F">F</option>
+          </TextField>
           <Button
             variant="contained"
             startIcon={<AddIcon />}

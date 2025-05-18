@@ -38,6 +38,7 @@ export interface CourseDetail {
   skillsAcquired: string;
   courseResponsible?: string;
   topics?: Topic[];
+  literature?: string; // Backend support coming soon
 }
 
 export interface Course {
@@ -45,12 +46,26 @@ export interface Course {
   title: string;
   code: string;
   semester: number;
-  lectureHours: number;
-  seminarHours: number;
-  labHours: number;
   credits: number;
-  evaluation: EvaluationMethod;
-  type: CourseType;
+  evaluation?: EvaluationMethod;
+  type?: CourseType;
+  // Flat API fields (optional)
+  courseTypeLabel?: string;
+  examMethod?: string;
+  teachingPlan?: TeachingPlan;
+  ethicsCode?: string;
+  teachingFormat?: string;
+  language?: string;
+  academicProgram?: string;
+  academicYear?: string;
+  courseResponsible?: string;
+  objective?: string;
+  keyConcepts?: string;
+  prerequisites?: string;
+  skillsAcquired?: string;
+  evaluationBreakdown?: EvaluationBreakdown;
+  topics?: Topic[];
+  // Nested detail (for compatibility)
   detail?: CourseDetail;
 }
 

@@ -51,11 +51,6 @@ export interface RemoveRoleRequest {
   role: UserRole;
 }
 
-export interface UserRolesResponse {
-  userId: string;
-  roles: UserRole[];
-}
-
 export interface UserLookupResponse {
   userId: string;
   email: string;
@@ -85,8 +80,8 @@ export const roleManagementApi = {
     });
   },
 
-  getUserRoles: async (userId: string): Promise<UserRolesResponse> => {
-    const response = await api.get<UserRolesResponse>(`/user/${userId}`);
+  getUserRoles: async (userId: string): Promise<UserRole[]> => {
+    const response = await api.get<UserRole[]>(`/user/${userId}`);
     return response.data;
   },
 
