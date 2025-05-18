@@ -2,7 +2,6 @@ import { User } from './_models';
 
 export class AuthInitializer {
   private static readonly AUTH_STATE_KEY = 'authState';
-  private static readonly TOKEN_KEY = 'token';
 
   /**
    * Loads the initial auth state from localStorage
@@ -56,21 +55,25 @@ export class AuthInitializer {
    */
   public static clearAuthState(): void {
     localStorage.removeItem(this.AUTH_STATE_KEY);
-    localStorage.removeItem(this.TOKEN_KEY);
   }
 
   /**
    * Saves the auth token to localStorage
    */
   public static saveToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    const state = this.loadInitialState();
+    if (state.user) {
+      state.user.token = token;
+      this.saveAuthState(state);
+    }
   }
 
   /**
    * Gets the stored auth token
    */
   public static getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    const state = this.loadInitialState();
+    return state.user?.token ?? null;
   }
 
   /**
