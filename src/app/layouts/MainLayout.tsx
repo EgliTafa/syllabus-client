@@ -1,10 +1,21 @@
-import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, Container, Button, IconButton, Menu, MenuItem } from '@mui/material';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { useState } from 'react';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useAuth } from '../../features/auth/hooks/useAuth';
+import { Outlet, Link as RouterLink, useNavigate } from "react-router-dom";
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+} from "@mui/material";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import { useState } from "react";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useAuth } from "../../features/auth/hooks/useAuth";
+import { ThemeToggle } from "../components";
 
 export const MainLayout = () => {
   const navigate = useNavigate();
@@ -27,25 +38,25 @@ export const MainLayout = () => {
 
   const handleTitleClick = () => {
     if (isAuthenticated) {
-      navigate('/syllabus');
+      navigate("/syllabus");
     } else {
-      navigate('/login');
+      navigate("/login");
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
               flexGrow: 1,
-              cursor: 'pointer',
-              '&:hover': {
-                opacity: 0.8
-              }
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8,
+              },
             }}
             onClick={handleTitleClick}
           >
@@ -53,19 +64,8 @@ export const MainLayout = () => {
           </Typography>
           {isAuthenticated ? (
             <>
-              <Button
-                color="inherit"
-                component={RouterLink}
-                to="/syllabus"
-              >
+              <Button color="inherit" component={RouterLink} to="/syllabus">
                 Syllabuses
-              </Button>
-              <Button
-                color="inherit"
-                component={RouterLink}
-                to="/courses"
-              >
-                Courses
               </Button>
               {isAdmin() && (
                 <Button
@@ -76,6 +76,11 @@ export const MainLayout = () => {
                   Admin Role Assignment
                 </Button>
               )}
+              <Button color="inherit" component={RouterLink} to="/courses">
+                Courses
+              </Button>
+              <Box sx={{ flexGrow: 1 }} />
+              <ThemeToggle />
               <IconButton
                 size="large"
                 aria-label="account of current user"
@@ -90,19 +95,19 @@ export const MainLayout = () => {
                 id="menu-appbar"
                 anchorEl={anchorEl}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
+                  vertical: "bottom",
+                  horizontal: "right",
                 }}
                 keepMounted
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
+                  vertical: "top",
+                  horizontal: "right",
                 }}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem 
-                  component={RouterLink} 
+                <MenuItem
+                  component={RouterLink}
                   to="/forgot-password"
                   onClick={handleClose}
                 >
@@ -113,18 +118,10 @@ export const MainLayout = () => {
             </>
           ) : (
             <>
-              <Button
-                color="inherit"
-                component={RouterLink}
-                to="/login"
-              >
+              <Button color="inherit" component={RouterLink} to="/login">
                 Login
               </Button>
-              <Button
-                color="inherit"
-                component={RouterLink}
-                to="/register"
-              >
+              <Button color="inherit" component={RouterLink} to="/register">
                 Register
               </Button>
             </>
@@ -137,4 +134,4 @@ export const MainLayout = () => {
       </Container>
     </Box>
   );
-}; 
+};
