@@ -32,14 +32,17 @@ export const Register = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   useEffect(() => {
-    // Clear any existing errors when component mounts
+    // Clear any existing errors and loading states when component mounts
     clearError();
+    setLocalLoading(false);
     
-    // Cleanup function to clear errors when component unmounts
+    // Cleanup function to clear errors and loading states when component unmounts
     return () => {
       clearError();
+      setLocalLoading(false);
     };
   }, [clearError]);
 
@@ -111,6 +114,7 @@ export const Register = () => {
     }
 
     try {
+      setLocalLoading(true);
       await handleRegister({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -121,6 +125,8 @@ export const Register = () => {
       });
     } catch (error) {
       // Error is handled by the auth hook
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -162,6 +168,7 @@ export const Register = () => {
               error={!!validationErrors.firstName}
               helperText={validationErrors.firstName}
               required
+              disabled={localLoading}
             />
             <TextField
               fullWidth
@@ -172,6 +179,7 @@ export const Register = () => {
               error={!!validationErrors.lastName}
               helperText={validationErrors.lastName}
               required
+              disabled={localLoading}
             />
             <TextField
               fullWidth
@@ -184,6 +192,7 @@ export const Register = () => {
               helperText={validationErrors.email}
               required
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+              disabled={localLoading}
             />
             <TextField
               fullWidth
@@ -195,6 +204,7 @@ export const Register = () => {
               helperText={validationErrors.phonePrefix}
               required
               placeholder="+355"
+              disabled={localLoading}
             />
             <TextField
               fullWidth
@@ -206,6 +216,7 @@ export const Register = () => {
               helperText={validationErrors.phoneNumber}
               required
               placeholder="1234567890"
+              disabled={localLoading}
             />
             <TextField
               fullWidth
@@ -218,12 +229,14 @@ export const Register = () => {
               helperText={validationErrors.password}
               required
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+              disabled={localLoading}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
+                      disabled={localLoading}
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
@@ -242,12 +255,14 @@ export const Register = () => {
               helperText={validationErrors.confirmPassword}
               required
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+              disabled={localLoading}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       edge="end"
+                      disabled={localLoading}
                     >
                       {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
@@ -261,10 +276,10 @@ export const Register = () => {
             fullWidth
             variant="contained"
             size="large"
-            disabled={isFetching}
+            disabled={localLoading}
             sx={{ mt: 3 }}
           >
-            {isFetching ? <CircularProgress size={24} /> : 'Register'}
+            {localLoading ? <CircularProgress size={24} /> : 'Register'}
           </Button>
         </form>
 
@@ -274,6 +289,7 @@ export const Register = () => {
             <Link 
               component={RouterLink} 
               to="/login"
+              onClick={() => setLocalLoading(false)}
               sx={{ 
                 color: 'primary.main',
                 '&:hover': {

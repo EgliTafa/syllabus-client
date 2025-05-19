@@ -18,14 +18,17 @@ export const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
+  const [localLoading, setLocalLoading] = useState(false);
 
   useEffect(() => {
-    // Clear any existing errors when component mounts
+    // Clear any existing errors and loading states when component mounts
     clearError();
+    setLocalLoading(false);
     
-    // Cleanup function to clear errors when component unmounts
+    // Cleanup function to clear errors and loading states when component unmounts
     return () => {
       clearError();
+      setLocalLoading(false);
     };
   }, [clearError]);
 
@@ -51,13 +54,21 @@ export const ForgotPassword = () => {
     }
 
     try {
+      setLocalLoading(true);
       const result = await handleForgotPassword({ email });
       if (result) {
         setSuccess(true);
       }
     } catch (error) {
       // Error is handled by the auth hook
+    } finally {
+      setLocalLoading(false);
     }
+  };
+
+  const handleBackToLogin = () => {
+    setLocalLoading(false);
+    navigate('/login');
   };
 
   return (
@@ -95,7 +106,7 @@ export const ForgotPassword = () => {
             <Button
               fullWidth
               variant="contained"
-              onClick={() => navigate('/login')}
+              onClick={handleBackToLogin}
               sx={{ mt: 2 }}
             >
               Back to Login
@@ -118,16 +129,17 @@ export const ForgotPassword = () => {
               helperText={validationError}
               required
               margin="normal"
+              disabled={localLoading}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               size="large"
-              disabled={isFetching}
+              disabled={localLoading}
               sx={{ mt: 3 }}
             >
-              {isFetching ? <CircularProgress size={24} /> : 'Reset Password'}
+              {localLoading ? <CircularProgress size={24} /> : 'Reset Password'}
             </Button>
           </form>
         )}
@@ -138,6 +150,7 @@ export const ForgotPassword = () => {
             <Link 
               component={RouterLink} 
               to="/login"
+              onClick={() => setLocalLoading(false)}
               sx={{ 
                 color: 'primary.main',
                 '&:hover': {
