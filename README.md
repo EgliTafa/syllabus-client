@@ -1,6 +1,6 @@
 # 📚 Syllabus Client
 
-A responsive, multilingual React + TypeScript frontend for managing academic syllabuses and course content. Built for university staff and professors to easily view and maintain syllabus structures, this app is tightly integrated with the [.NET-based Syllabus API](https://github.com/EgliTafa/SyllabusAPI).
+A responsive React + TypeScript frontend for managing academic syllabuses and course content. Built for university staff and professors to easily view and maintain syllabus structures, this app is tightly integrated with the [.NET-based Syllabus API](https://github.com/EgliTafa/SyllabusAPI).
 
 ---
 
@@ -14,32 +14,45 @@ A responsive, multilingual React + TypeScript frontend for managing academic syl
 | State Management  | Redux Toolkit                         |
 | Routing           | React Router DOM                      |
 | HTTP Requests     | Axios                                 |
-| Internationalization | react-intl                        |
-| Theming           | MUI Theme Provider (Light & Dark mode)|
+| Authentication    | JWT with Axios Interceptors           |
+| Theming           | MUI Theme Provider                    |
 | Build Tool        | CRA (Create React App)                |
 | Mobile Support    | Responsive design with MUI Grid/Flexbox |
-| Styling           | MUI SX + Custom SCSS Modules          |
-| DevOps (planned)  | Docker                                |
-| Testing (planned) | Jest + React Testing Library          |
+| Styling           | MUI SX                                |
+| Containerization  | Docker                                |
 
 ---
 
 ## ✨ Features
 
-- ✅ **Light/Dark Theme Toggle** (based on MUI theme)
-- ✅ **Responsive UI** for desktop, tablet, and mobile
-- ✅ **Multilingual UI**: English 🇬🇧 & Albanian 🇦🇱
-- ✅ **Syllabus listing & detail view**
-- ✅ **Course and course details display**
-- ✅ **City and Country selectors**
-- ✅ **Editable business and professor data (modal based)**
+- ✅ **Authentication System**
+  - User registration with validation
+  - Secure login with JWT
+  - Password reset functionality
+  - Role-based access control
 
-> 🧩 **Planned Features**:
-- 🔐 Authentication via JWT
-- ➕ Create/edit syllabuses and courses
-- 📄 Export to DOCX/PDF using backend support
-- ⬆️ File upload support for attachments
-- 🧑‍🎓 Role-based UI (Admin vs Professor)
+- ✅ **Responsive UI**
+  - Mobile-first design
+  - Adaptive layouts for all screen sizes
+  - Touch-friendly interface
+
+- ✅ **Syllabus Management**
+  - View syllabus details
+  - Course listing by semester
+  - Interactive course tables
+  - Generate syllabus documents
+
+- ✅ **Course Management**
+  - Detailed course information
+  - Teaching plan display
+  - Evaluation breakdown
+  - Course editing capabilities
+
+- ✅ **User Features**
+  - Role-based navigation
+  - Profile management
+  - Secure authentication
+  - Session management
 
 ---
 
@@ -50,15 +63,17 @@ syllabus-client/
 ├── public/
 ├── src/
 │   ├── app/                ← App setup, store config
-│   ├── features/           ← Domain features (e.g., business, syllabus)
+│   ├── features/           ← Domain features
+│   │   ├── auth/          ← Authentication
+│   │   ├── courses/       ← Course management
+│   │   └── syllabus/      ← Syllabus management
 │   ├── components/         ← Shared UI components
-│   ├── pages/              ← Route-based pages
-│   ├── translations/       ← i18n JSON files
-│   ├── theme/              ← Light/Dark theme setup
-│   ├── utils/              ← Helpers & constants
+│   ├── layouts/           ← Page layouts
+│   ├── theme/             ← Theme configuration
+│   ├── utils/             ← Helpers & constants
 │   └── index.tsx
 ├── .env
-├── Dockerfile (planned)
+├── Dockerfile
 ├── package.json
 └── README.md
 ```
@@ -101,49 +116,66 @@ Create a `.env` file in the root and add the backend API URL:
 REACT_APP_API_BASE_URL=http://localhost:5000
 ```
 
----
-
-## 🌍 Internationalization
-
-Supports multiple languages using `react-intl`. Currently includes:
-
-- 🇬🇧 English (`en.json`)
-- 🇦🇱 Albanian (`sq.json`)
-
-Translations are organized in `src/translations/` and can be extended easily.
+For production:
+```
+REACT_APP_API_BASE_URL=https://syllabus-app-container.yellowfield-b94f6044.westus2.azurecontainerapps.io
+```
 
 ---
 
-## 🎨 Theme Support
+## 🔐 Authentication
 
-- Uses Material UI theming.
-- Supports both **Light Mode** and **Dark Mode**.
-- Theme preference is toggleable and stored in browser memory.
+The application uses JWT-based authentication with the following features:
+
+- Secure user registration with validation
+- Email-based login
+- Password reset functionality
+- Role-based access control (Administrator, Professor, Student)
+- Automatic token management
+- Protected routes
 
 ---
 
 ## 📱 Mobile Support
 
-- Fully responsive using Material UI’s grid system and media queries.
-- Components adapt gracefully to smaller screens and tablets.
+- Fully responsive using Material UI's grid system
+- Mobile-optimized forms and tables
+- Touch-friendly interface elements
+- Adaptive layouts for all screen sizes
+
+---
+
+## 🐳 Docker Support
+
+The application is containerized using Docker:
+
+```bash
+# Build the image
+docker build -t syllabus-client .
+
+# Run the container
+docker run -p 3000:3000 syllabus-client
+```
 
 ---
 
 ## 🚧 Roadmap
 
-- [x] Static views for syllabus, courses, and business data
-- [x] Theme switcher and i18n setup
-- [ ] Authentication (JWT-based)
-- [ ] Editable syllabus creation form
-- [ ] File upload and document export integration
-- [ ] Docker container support
-- [ ] End-to-end testing suite
+- [x] Authentication system
+- [x] Syllabus management
+- [x] Course management
+- [x] Responsive design
+- [x] Docker containerization
+- [ ] Document generation
+- [ ] File upload support
+- [ ] Advanced search functionality
+- [ ] Analytics dashboard
 
 ---
 
 ## 👥 Contributing
 
-Contributions are welcome! Whether it's code, bug reports, or translations, feel free to open a pull request or issue.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
@@ -157,4 +189,4 @@ GitHub: [@EgliTafa](https://github.com/EgliTafa)
 
 ## 📄 License
 
-[MIT License](LICENSE)
+[MIT License](LICENSE) 
