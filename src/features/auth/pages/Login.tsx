@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -15,11 +15,26 @@ import { useAuth } from '../hooks/useAuth';
 export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { handleLogin, isFetching, error } = useAuth();
+  const { handleLogin, isFetching, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
+
+  useEffect(() => {
+    // Clear any existing errors when component mounts
+    clearError();
+    
+    // Cleanup function to clear errors when component unmounts
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

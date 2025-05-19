@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -19,7 +19,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export const Register = () => {
   const navigate = useNavigate();
-  const { handleRegister, isFetching, error } = useAuth();
+  const { handleRegister, isFetching, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -32,6 +32,16 @@ export const Register = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    // Clear any existing errors when component mounts
+    clearError();
+    
+    // Cleanup function to clear errors when component unmounts
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};

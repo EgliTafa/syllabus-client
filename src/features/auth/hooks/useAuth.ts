@@ -33,8 +33,13 @@ export const useAuth = () => {
     (state: RootState) => state.auth as AuthState
   );
 
+  const clearError = useCallback(() => {
+    dispatch(setError(null));
+  }, [dispatch]);
+
   const handleRegister = async (data: RegisterUserRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.register(data);
       dispatch(setUser(response));
@@ -77,13 +82,34 @@ export const useAuth = () => {
 
   const handleLogin = async (data: LoginRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.login(data);
       dispatch(setUser(response));
       localStorage.setItem("token", response.token);
       navigate("/syllabus");
     } catch (error: any) {
-      dispatch(setError(error.response?.data?.message || "Login failed"));
+      let errorMessage = "Login failed";
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            errorMessage = "Invalid email or password. Please try again.";
+            break;
+          case 400:
+            errorMessage = "Please check your input. Email and password are required.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Login failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));
@@ -98,12 +124,36 @@ export const useAuth = () => {
 
   const handleForgotPassword = async (data: ForgotPasswordRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
       await authApi.forgotPassword(data);
+      navigate("/login", { 
+        state: { 
+          message: "Password reset instructions have been sent to your email." 
+        }
+      });
     } catch (error: any) {
-      dispatch(
-        setError(error.response?.data?.message || "Failed to send reset email")
-      );
+      let errorMessage = "Failed to send reset email";
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 404:
+            errorMessage = "No account found with this email address.";
+            break;
+          case 400:
+            errorMessage = "Please enter a valid email address.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Failed to send reset email. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));
@@ -145,6 +195,7 @@ export const useAuth = () => {
     isAuthenticated,
     isFetching,
     error,
+    clearError,
     handleRegister,
     handleLogin,
     handleLogout,

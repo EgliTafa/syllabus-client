@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -14,9 +14,20 @@ import { useAuth } from '../hooks/useAuth';
 
 export const ForgotPassword = () => {
   const navigate = useNavigate();
-  const { handleForgotPassword, isFetching, error } = useAuth();
+  const { handleForgotPassword, isFetching, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
+
+  useEffect(() => {
+    // Clear any existing errors when component mounts
+    clearError();
+    
+    // Cleanup function to clear errors when component unmounts
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
