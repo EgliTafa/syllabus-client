@@ -41,9 +41,34 @@ export const useAuth = () => {
       localStorage.setItem("token", response.token);
       navigate("/syllabus");
     } catch (error: any) {
-      dispatch(
-        setError(error.response?.data?.message || "Registration failed")
-      );
+      let errorMessage = "Registration failed";
+      
+      if (error.response) {
+        // Handle specific error types
+        switch (error.response.status) {
+          case 400:
+            if (error.response.data?.detail?.includes("conflict")) {
+              errorMessage = "This email is already registered. Please use a different email or try logging in.";
+            } else if (error.response.data?.detail?.includes("validation")) {
+              errorMessage = "Please check your input. All fields are required and password must be at least 8 characters.";
+            } else {
+              errorMessage = error.response.data?.detail || "Invalid registration data. Please check your input.";
+            }
+            break;
+          case 409:
+            errorMessage = "This email is already registered. Please use a different email or try logging in.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Registration failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));

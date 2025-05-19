@@ -9,9 +9,13 @@ import {
   Link,
   CircularProgress,
   Alert,
-  Grid
+  Grid,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -25,7 +29,54 @@ export const Register = () => {
     phonePrefix: '',
     phoneNumber: ''
   });
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+    
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.phonePrefix.trim()) {
+      errors.phonePrefix = 'Phone prefix is required';
+    } else if (!/^\+[0-9]{1,4}$/.test(formData.phonePrefix)) {
+      errors.phonePrefix = 'Please enter a valid prefix (e.g., +355)';
+    }
+    
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = 'Phone number is required';
+    } else if (!/^[0-9]{6,15}$/.test(formData.phoneNumber)) {
+      errors.phoneNumber = 'Please enter a valid phone number';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long';
+    }
+    
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,24 +84,19 @@ export const Register = () => {
       ...prev,
       [name]: value
     }));
-    // Clear password error when user types
-    if (name === 'password' || name === 'confirmPassword') {
-      setPasswordError(null);
+    // Clear validation error when user types
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordError('Passwords do not match');
-      return;
-    }
-
-    // Validate password strength
-    if (formData.password.length < 8) {
-      setPasswordError('Password must be at least 8 characters long');
+    if (!validateForm()) {
       return;
     }
 
@@ -95,12 +141,6 @@ export const Register = () => {
           </Alert>
         )}
 
-        {passwordError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {passwordError}
-          </Alert>
-        )}
-
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
             <TextField
@@ -109,6 +149,8 @@ export const Register = () => {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
+              error={!!validationErrors.firstName}
+              helperText={validationErrors.firstName}
               required
             />
             <TextField
@@ -117,6 +159,8 @@ export const Register = () => {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
+              error={!!validationErrors.lastName}
+              helperText={validationErrors.lastName}
               required
             />
             <TextField
@@ -126,6 +170,8 @@ export const Register = () => {
               type="email"
               value={formData.email}
               onChange={handleChange}
+              error={!!validationErrors.email}
+              helperText={validationErrors.email}
               required
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
             />
@@ -135,8 +181,10 @@ export const Register = () => {
               name="phonePrefix"
               value={formData.phonePrefix}
               onChange={handleChange}
+              error={!!validationErrors.phonePrefix}
+              helperText={validationErrors.phonePrefix}
               required
-              placeholder="+1"
+              placeholder="+355"
             />
             <TextField
               fullWidth
@@ -144,6 +192,8 @@ export const Register = () => {
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
+              error={!!validationErrors.phoneNumber}
+              helperText={validationErrors.phoneNumber}
               required
               placeholder="1234567890"
             />
@@ -151,22 +201,49 @@ export const Register = () => {
               fullWidth
               label="Password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={handleChange}
+              error={!!validationErrors.password}
+              helperText={validationErrors.password}
               required
-              helperText="Password must be at least 8 characters long"
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <TextField
               fullWidth
               label="Confirm Password"
               name="confirmPassword"
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
               onChange={handleChange}
+              error={!!validationErrors.confirmPassword}
+              helperText={validationErrors.confirmPassword}
               required
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
           <Button
