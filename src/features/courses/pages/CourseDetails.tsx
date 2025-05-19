@@ -140,18 +140,31 @@ export const CourseDetails = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between" 
+        alignItems={{ xs: 'stretch', sm: 'center' }} 
+        gap={2}
+        mb={3}
+      >
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/courses')}
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
         >
           Back to Courses
         </Button>
-        <Box>
+        <Box 
+          display="flex" 
+          flexDirection={{ xs: 'column', sm: 'row' }}
+          gap={2}
+          width={{ xs: '100%', sm: 'auto' }}
+        >
           <Button
             variant="outlined"
             color="secondary"
-            sx={{ mr: 2 }}
+            fullWidth={true}
             onClick={handleGenerateDocument}
           >
             Generate Course Document
@@ -159,6 +172,7 @@ export const CourseDetails = () => {
           <Button
             variant="contained"
             startIcon={<EditIcon />}
+            fullWidth={true}
             onClick={openEditModal}
           >
             Edit Course

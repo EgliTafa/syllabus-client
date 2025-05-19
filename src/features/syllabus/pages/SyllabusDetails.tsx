@@ -103,19 +103,31 @@ export const SyllabusDetails = () => {
 
   return (
     <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between" 
+        alignItems={{ xs: 'stretch', sm: 'center' }} 
+        gap={2}
+        mb={3}
+      >
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/syllabus')}
-          sx={{ mb: 3 }}
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
         >
           Back to List
         </Button>
-        <Box>
+        <Box 
+          display="flex" 
+          flexDirection={{ xs: 'column', sm: 'row' }}
+          gap={2}
+          width={{ xs: '100%', sm: 'auto' }}
+        >
           <Button
             variant="outlined"
             color="secondary"
-            sx={{ mr: 2 }}
+            fullWidth={true}
             onClick={handleGenerateDocument}
           >
             Generate Syllabus Document
@@ -123,6 +135,7 @@ export const SyllabusDetails = () => {
           <Button
             variant="contained"
             color="primary"
+            fullWidth={true}
             onClick={handleEditClick}
           >
             Edit Syllabus
