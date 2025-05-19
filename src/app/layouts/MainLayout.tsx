@@ -9,11 +9,19 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  useMediaQuery,
+  useTheme,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useState } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { ThemeToggle } from "../components";
 
@@ -22,6 +30,9 @@ export const MainLayout = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { handleLogout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -34,6 +45,7 @@ export const MainLayout = () => {
   const handleLogoutClick = () => {
     handleLogout();
     handleClose();
+    setMobileMenuOpen(false);
   };
 
   const handleTitleClick = () => {
@@ -43,6 +55,54 @@ export const MainLayout = () => {
       navigate("/login");
     }
   };
+
+  const handleMobileMenuToggle = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const renderMobileMenu = () => (
+    <Drawer
+      anchor="right"
+      open={mobileMenuOpen}
+      onClose={handleMobileMenuToggle}
+    >
+      <Box sx={{ width: 250 }}>
+        <List>
+          {isAuthenticated ? (
+            <>
+              <ListItem component={RouterLink} to="/syllabus" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="Syllabuses" />
+              </ListItem>
+              {isAdmin() && (
+                <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
+                  <ListItemText primary="Admin Role Assignment" />
+                </ListItem>
+              )}
+              <ListItem component={RouterLink} to="/courses" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="Courses" />
+              </ListItem>
+              <Divider />
+              <ListItem component={RouterLink} to="/forgot-password" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="Forgot Password" />
+              </ListItem>
+              <ListItem onClick={handleLogoutClick}>
+                <ListItemText primary="Logout" />
+              </ListItem>
+            </>
+          ) : (
+            <>
+              <ListItem component={RouterLink} to="/login" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="Login" />
+              </ListItem>
+              <ListItem component={RouterLink} to="/register" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="Register" />
+              </ListItem>
+            </>
+          )}
+        </List>
+      </Box>
+    </Drawer>
+  );
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -64,33 +124,49 @@ export const MainLayout = () => {
           </Typography>
           {isAuthenticated ? (
             <>
-              <Button color="inherit" component={RouterLink} to="/syllabus">
-                Syllabuses
-              </Button>
-              {isAdmin() && (
-                <Button
-                  color="inherit"
-                  component={RouterLink}
-                  to="/admin/roles"
-                >
-                  Admin Role Assignment
-                </Button>
+              {!isMobile && (
+                <>
+                  <Button color="inherit" component={RouterLink} to="/syllabus">
+                    Syllabuses
+                  </Button>
+                  {isAdmin() && (
+                    <Button
+                      color="inherit"
+                      component={RouterLink}
+                      to="/admin/roles"
+                    >
+                      Admin Role Assignment
+                    </Button>
+                  )}
+                  <Button color="inherit" component={RouterLink} to="/courses">
+                    Courses
+                  </Button>
+                </>
               )}
-              <Button color="inherit" component={RouterLink} to="/courses">
-                Courses
-              </Button>
               <Box sx={{ flexGrow: 1 }} />
               <ThemeToggle />
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenu}
-                color="inherit"
-              >
-                <AccountCircleIcon />
-              </IconButton>
+              {isMobile ? (
+                <IconButton
+                  size="large"
+                  edge="end"
+                  color="inherit"
+                  aria-label="menu"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <MenuIcon />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="large"
+                  aria-label="account of current user"
+                  aria-controls="menu-appbar"
+                  aria-haspopup="true"
+                  onClick={handleMenu}
+                  color="inherit"
+                >
+                  <AccountCircleIcon />
+                </IconButton>
+              )}
               <Menu
                 id="menu-appbar"
                 anchorEl={anchorEl}
@@ -118,16 +194,32 @@ export const MainLayout = () => {
             </>
           ) : (
             <>
-              <Button color="inherit" component={RouterLink} to="/login">
-                Login
-              </Button>
-              <Button color="inherit" component={RouterLink} to="/register">
-                Register
-              </Button>
+              {!isMobile && (
+                <>
+                  <Button color="inherit" component={RouterLink} to="/login">
+                    Login
+                  </Button>
+                  <Button color="inherit" component={RouterLink} to="/register">
+                    Register
+                  </Button>
+                </>
+              )}
+              {isMobile && (
+                <IconButton
+                  size="large"
+                  edge="end"
+                  color="inherit"
+                  aria-label="menu"
+                  onClick={handleMobileMenuToggle}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
             </>
           )}
         </Toolbar>
       </AppBar>
+      {renderMobileMenu()}
 
       <Container component="main" sx={{ flexGrow: 1, py: 3 }}>
         <Outlet />
