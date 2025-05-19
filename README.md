@@ -1,46 +1,160 @@
-# Getting Started with Create React App
+# 📚 Syllabus Client
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A responsive, multilingual React + TypeScript frontend for managing academic syllabuses and course content. Built for university staff and professors to easily view and maintain syllabus structures, this app is tightly integrated with the [.NET-based Syllabus API](https://github.com/EgliTafa/syllabus-api).
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## ⚙️ Technologies Used
 
-### `npm start`
+| Purpose           | Technology                           |
+|-------------------|---------------------------------------|
+| Language          | TypeScript                            |
+| Framework         | React                                 |
+| UI Library        | Material UI (MUI v5)                  |
+| State Management  | Redux Toolkit                         |
+| Routing           | React Router DOM                      |
+| HTTP Requests     | Axios                                 |
+| Internationalization | react-intl                        |
+| Theming           | MUI Theme Provider (Light & Dark mode)|
+| Build Tool        | CRA (Create React App)                |
+| Mobile Support    | Responsive design with MUI Grid/Flexbox |
+| Styling           | MUI SX + Custom SCSS Modules          |
+| DevOps (planned)  | Docker                                |
+| Testing (planned) | Jest + React Testing Library          |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+---
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## ✨ Features
 
-### `npm test`
+- ✅ **Light/Dark Theme Toggle** (based on MUI theme)
+- ✅ **Responsive UI** for desktop, tablet, and mobile
+- ✅ **Multilingual UI**: English 🇬🇧 & Albanian 🇦🇱
+- ✅ **Syllabus listing & detail view**
+- ✅ **Course and course details display**
+- ✅ **City and Country selectors**
+- ✅ **Editable business and professor data (modal based)**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+> 🧩 **Planned Features**:
+- 🔐 Authentication via JWT
+- ➕ Create/edit syllabuses and courses
+- 📄 Export to DOCX/PDF using backend support
+- ⬆️ File upload support for attachments
+- 🧑‍🎓 Role-based UI (Admin vs Professor)
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📁 Folder Structure
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+syllabus-client/
+├── public/
+├── src/
+│   ├── app/                ← App setup, store config
+│   ├── features/           ← Domain features (e.g., business, syllabus)
+│   ├── components/         ← Shared UI components
+│   ├── pages/              ← Route-based pages
+│   ├── translations/       ← i18n JSON files
+│   ├── theme/              ← Light/Dark theme setup
+│   ├── utils/              ← Helpers & constants
+│   └── index.tsx
+├── .env
+├── Dockerfile (planned)
+├── package.json
+└── README.md
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🚀 Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### 🔧 Prerequisites
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Node.js (v18+)
+- npm (v9+)
+- Backend running from: [syllabus-api](https://github.com/EgliTafa/syllabus-api)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+---
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### 📦 Install Dependencies
 
-## Learn More
+```bash
+npm install
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 🧪 Start the App
+
+```bash
+npm run start
+```
+
+> Then open: [http://localhost:3000](http://localhost:3000)
+
+---
+
+### 🌐 Environment Setup
+
+Create a `.env` file in the root and add the backend API URL:
+
+```
+REACT_APP_API_BASE_URL=http://localhost:5000
+```
+
+---
+
+## 🌍 Internationalization
+
+Supports multiple languages using `react-intl`. Currently includes:
+
+- 🇬🇧 English (`en.json`)
+- 🇦🇱 Albanian (`sq.json`)
+
+Translations are organized in `src/translations/` and can be extended easily.
+
+---
+
+## 🎨 Theme Support
+
+- Uses Material UI theming.
+- Supports both **Light Mode** and **Dark Mode**.
+- Theme preference is toggleable and stored in browser memory.
+
+---
+
+## 📱 Mobile Support
+
+- Fully responsive using Material UI’s grid system and media queries.
+- Components adapt gracefully to smaller screens and tablets.
+
+---
+
+## 🚧 Roadmap
+
+- [x] Static views for syllabus, courses, and business data
+- [x] Theme switcher and i18n setup
+- [ ] Authentication (JWT-based)
+- [ ] Editable syllabus creation form
+- [ ] File upload and document export integration
+- [ ] Docker container support
+- [ ] End-to-end testing suite
+
+---
+
+## 👥 Contributing
+
+Contributions are welcome! Whether it's code, bug reports, or translations, feel free to open a pull request or issue.
+
+---
+
+## 👨‍💻 Author
+
+**E. T.**  
+Senior .NET & React Developer  
+GitHub: [@EgliTafa](https://github.com/EgliTafa)
+
+---
+
+## 📄 License
+
+[MIT License](LICENSE)
