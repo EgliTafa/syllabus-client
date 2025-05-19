@@ -1,6 +1,6 @@
 # 📚 Syllabus Client
 
-A responsive, multilingual React + TypeScript frontend for managing academic syllabuses and course content. Built for university staff and professors to easily view and maintain syllabus structures, this app is tightly integrated with the [.NET-based Syllabus API](https://github.com/EgliTafa/syllabus-api).
+A responsive, multilingual React + TypeScript frontend for managing academic syllabuses and course content. Built for university staff and professors to easily view and maintain syllabus structures, this app is tightly integrated with the [.NET-based Syllabus API](https://github.com/EgliTafa/SyllabusAPI).
 
 ---
 
