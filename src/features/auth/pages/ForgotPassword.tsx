@@ -29,11 +29,32 @@ export const ForgotPassword = () => {
     };
   }, [clearError]);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setValidationError('Email is required');
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      setValidationError('Please enter a valid email address');
+      return false;
+    }
+    setValidationError('');
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateEmail(email)) {
+      return;
+    }
+
     try {
-      await handleForgotPassword({ email });
-      setSuccess(true);
+      const result = await handleForgotPassword({ email });
+      if (result) {
+        setSuccess(true);
+      }
     } catch (error) {
       // Error is handled by the auth hook
     }
@@ -87,7 +108,14 @@ export const ForgotPassword = () => {
               label="Email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (validationError) {
+                  validateEmail(e.target.value);
+                }
+              }}
+              error={!!validationError}
+              helperText={validationError}
               required
               margin="normal"
             />
@@ -107,7 +135,16 @@ export const ForgotPassword = () => {
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="body2">
             Remember your password?{' '}
-            <Link component={RouterLink} to="/login">
+            <Link 
+              component={RouterLink} 
+              to="/login"
+              sx={{ 
+                color: 'primary.main',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
               Login
             </Link>
           </Typography>

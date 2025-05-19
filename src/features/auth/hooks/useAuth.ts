@@ -127,11 +127,7 @@ export const useAuth = () => {
       clearError();
       dispatch(setIsFetching(true));
       await authApi.forgotPassword(data);
-      navigate("/login", { 
-        state: { 
-          message: "Password reset instructions have been sent to your email." 
-        }
-      });
+      return true;
     } catch (error: any) {
       let errorMessage = "Failed to send reset email";
       
