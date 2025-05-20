@@ -182,7 +182,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 👨‍💻 Author
 
 **E. T.**  
-Senior .NET & React Developer  
+Junior .NET & React Developer  
 GitHub: [@EgliTafa](https://github.com/EgliTafa)
 
 ---
