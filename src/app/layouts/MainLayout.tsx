@@ -82,8 +82,8 @@ export const MainLayout = () => {
                 <ListItemText primary="Courses" />
               </ListItem>
               <Divider />
-              <ListItem component={RouterLink} to="/forgot-password" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="Forgot Password" />
+              <ListItem component={RouterLink} to="/profile" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="Profile" />
               </ListItem>
               <ListItem onClick={handleLogoutClick}>
                 <ListItemText primary="Logout" />
@@ -184,10 +184,10 @@ export const MainLayout = () => {
               >
                 <MenuItem
                   component={RouterLink}
-                  to="/forgot-password"
+                  to="/profile"
                   onClick={handleClose}
                 >
-                  Forgot Password
+                  Profile
                 </MenuItem>
                 <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
               </Menu>
