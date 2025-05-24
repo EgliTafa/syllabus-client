@@ -12,7 +12,8 @@ import {
   Avatar,
   IconButton,
   InputAdornment,
-  Grid
+  Grid,
+  Snackbar
 } from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
 import Visibility from '@mui/icons-material/Visibility';
@@ -27,6 +28,15 @@ export const UserProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [updateStatus, setUpdateStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    show: boolean;
+  }>({
+    type: 'success',
+    message: '',
+    show: false
+  });
   
   const [profileData, setProfileData] = useState({
     firstName: user?.firstName || '',
@@ -92,8 +102,17 @@ export const UserProfile = () => {
     e.preventDefault();
     try {
       await handleUpdateProfile(profileData);
-    } catch (error) {
-      // Error is handled by the auth hook
+      setUpdateStatus({
+        type: 'success',
+        message: 'Profile updated successfully!',
+        show: true
+      });
+    } catch (error: any) {
+      setUpdateStatus({
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to update profile. Please try again.',
+        show: true
+      });
     }
   };
 
@@ -112,6 +131,10 @@ export const UserProfile = () => {
     } catch (error) {
       // Error is handled by the auth hook
     }
+  };
+
+  const handleCloseStatus = () => {
+    setUpdateStatus(prev => ({ ...prev, show: false }));
   };
 
   return (
@@ -144,6 +167,21 @@ export const UserProfile = () => {
             {error}
           </Alert>
         )}
+
+        <Snackbar
+          open={updateStatus.show}
+          autoHideDuration={6000}
+          onClose={handleCloseStatus}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseStatus} 
+            severity={updateStatus.type}
+            sx={{ width: '100%' }}
+          >
+            {updateStatus.message}
+          </Alert>
+        </Snackbar>
 
         <Grid container spacing={4}>
           {/* Profile Information Section */}

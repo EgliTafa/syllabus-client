@@ -62,6 +62,16 @@ export interface UpdateProfileRequest {
   phoneNumber: string;
 }
 
+export interface UpdateProfileResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phonePrefix: string;
+  phoneNumber: string;
+  profilePictureUrl?: string;
+}
+
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
