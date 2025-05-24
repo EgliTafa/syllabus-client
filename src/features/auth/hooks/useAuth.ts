@@ -33,17 +33,47 @@ export const useAuth = () => {
     (state: RootState) => state.auth as AuthState
   );
 
+  const clearError = useCallback(() => {
+    dispatch(setError(null));
+  }, [dispatch]);
+
   const handleRegister = async (data: RegisterUserRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.register(data);
       dispatch(setUser(response));
       localStorage.setItem("token", response.token);
       navigate("/syllabus");
     } catch (error: any) {
-      dispatch(
-        setError(error.response?.data?.message || "Registration failed")
-      );
+      let errorMessage = "Registration failed";
+      
+      if (error.response) {
+        // Handle specific error types
+        switch (error.response.status) {
+          case 400:
+            if (error.response.data?.detail?.includes("conflict")) {
+              errorMessage = "This email is already registered. Please use a different email or try logging in.";
+            } else if (error.response.data?.detail?.includes("validation")) {
+              errorMessage = "Please check your input. All fields are required and password must be at least 8 characters.";
+            } else {
+              errorMessage = error.response.data?.detail || "Invalid registration data. Please check your input.";
+            }
+            break;
+          case 409:
+            errorMessage = "This email is already registered. Please use a different email or try logging in.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Registration failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));
@@ -52,13 +82,34 @@ export const useAuth = () => {
 
   const handleLogin = async (data: LoginRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.login(data);
       dispatch(setUser(response));
       localStorage.setItem("token", response.token);
       navigate("/syllabus");
     } catch (error: any) {
-      dispatch(setError(error.response?.data?.message || "Login failed"));
+      let errorMessage = "Login failed";
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            errorMessage = "Invalid email or password. Please try again.";
+            break;
+          case 400:
+            errorMessage = "Please check your input. Email and password are required.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Login failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));
@@ -73,12 +124,32 @@ export const useAuth = () => {
 
   const handleForgotPassword = async (data: ForgotPasswordRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
       await authApi.forgotPassword(data);
+      return true;
     } catch (error: any) {
-      dispatch(
-        setError(error.response?.data?.message || "Failed to send reset email")
-      );
+      let errorMessage = "Failed to send reset email";
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 404:
+            errorMessage = "No account found with this email address.";
+            break;
+          case 400:
+            errorMessage = "Please enter a valid email address.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Failed to send reset email. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));
@@ -120,6 +191,7 @@ export const useAuth = () => {
     isAuthenticated,
     isFetching,
     error,
+    clearError,
     handleRegister,
     handleLogin,
     handleLogout,

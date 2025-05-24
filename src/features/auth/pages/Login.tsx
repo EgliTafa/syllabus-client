@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -8,18 +8,57 @@ import {
   Button,
   Link,
   CircularProgress,
-  Alert
+  Alert,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { handleLogin, isFetching, error } = useAuth();
+  const { handleLogin, isFetching, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    email?: string;
+    password?: string;
+  }>({});
+  const [localLoading, setLocalLoading] = useState(false);
+
+  useEffect(() => {
+    // Clear any existing errors and loading states when component mounts
+    clearError();
+    setLocalLoading(false);
+    
+    // Cleanup function to clear errors and loading states when component unmounts
+    return () => {
+      clearError();
+      setLocalLoading(false);
+    };
+  }, [clearError]);
+
+  const validateForm = () => {
+    const errors: { email?: string; password?: string } = {};
+    
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,15 +66,35 @@ export const Login = () => {
       ...prev,
       [name]: value
     }));
+    // Clear validation error when user types
+    if (validationErrors[name as keyof typeof validationErrors]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     try {
+      setLocalLoading(true);
       await handleLogin(formData);
     } catch (error) {
       // Error is handled by the auth hook
+    } finally {
+      setLocalLoading(false);
     }
+  };
+
+  const handleNavigation = (path: string) => {
+    setLocalLoading(false);
+    navigate(path);
   };
 
   return (
@@ -79,28 +138,47 @@ export const Login = () => {
             type="email"
             value={formData.email}
             onChange={handleChange}
+            error={!!validationErrors.email}
+            helperText={validationErrors.email}
             required
             margin="normal"
+            disabled={localLoading}
           />
           <TextField
             fullWidth
             label="Password"
             name="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
+            error={!!validationErrors.password}
+            helperText={validationErrors.password}
             required
             margin="normal"
+            disabled={localLoading}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    disabled={localLoading}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
             size="large"
-            disabled={isFetching}
+            disabled={localLoading}
             sx={{ mt: 3 }}
           >
-            {isFetching ? <CircularProgress size={24} /> : 'Login'}
+            {localLoading ? <CircularProgress size={24} /> : 'Login'}
           </Button>
         </form>
 
@@ -110,6 +188,7 @@ export const Login = () => {
             <Link 
               component={RouterLink} 
               to="/register"
+              onClick={() => setLocalLoading(false)}
               sx={{ 
                 color: 'primary.main',
                 '&:hover': {
@@ -124,6 +203,7 @@ export const Login = () => {
             <Link 
               component={RouterLink} 
               to="/forgot-password"
+              onClick={() => setLocalLoading(false)}
               sx={{ 
                 color: 'primary.main',
                 '&:hover': {

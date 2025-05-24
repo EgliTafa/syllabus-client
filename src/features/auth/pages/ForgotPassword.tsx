@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -14,18 +14,61 @@ import { useAuth } from '../hooks/useAuth';
 
 export const ForgotPassword = () => {
   const navigate = useNavigate();
-  const { handleForgotPassword, isFetching, error } = useAuth();
+  const { handleForgotPassword, isFetching, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
+  const [localLoading, setLocalLoading] = useState(false);
+
+  useEffect(() => {
+    // Clear any existing errors and loading states when component mounts
+    clearError();
+    setLocalLoading(false);
+    
+    // Cleanup function to clear errors and loading states when component unmounts
+    return () => {
+      clearError();
+      setLocalLoading(false);
+    };
+  }, [clearError]);
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setValidationError('Email is required');
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      setValidationError('Please enter a valid email address');
+      return false;
+    }
+    setValidationError('');
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateEmail(email)) {
+      return;
+    }
+
     try {
-      await handleForgotPassword({ email });
-      setSuccess(true);
+      setLocalLoading(true);
+      const result = await handleForgotPassword({ email });
+      if (result) {
+        setSuccess(true);
+      }
     } catch (error) {
       // Error is handled by the auth hook
+    } finally {
+      setLocalLoading(false);
     }
+  };
+
+  const handleBackToLogin = () => {
+    setLocalLoading(false);
+    navigate('/login');
   };
 
   return (
@@ -63,7 +106,7 @@ export const ForgotPassword = () => {
             <Button
               fullWidth
               variant="contained"
-              onClick={() => navigate('/login')}
+              onClick={handleBackToLogin}
               sx={{ mt: 2 }}
             >
               Back to Login
@@ -76,19 +119,27 @@ export const ForgotPassword = () => {
               label="Email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (validationError) {
+                  validateEmail(e.target.value);
+                }
+              }}
+              error={!!validationError}
+              helperText={validationError}
               required
               margin="normal"
+              disabled={localLoading}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               size="large"
-              disabled={isFetching}
+              disabled={localLoading}
               sx={{ mt: 3 }}
             >
-              {isFetching ? <CircularProgress size={24} /> : 'Reset Password'}
+              {localLoading ? <CircularProgress size={24} /> : 'Reset Password'}
             </Button>
           </form>
         )}
@@ -96,7 +147,17 @@ export const ForgotPassword = () => {
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="body2">
             Remember your password?{' '}
-            <Link component={RouterLink} to="/login">
+            <Link 
+              component={RouterLink} 
+              to="/login"
+              onClick={() => setLocalLoading(false)}
+              sx={{ 
+                color: 'primary.main',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
+              }}
+            >
               Login
             </Link>
           </Typography>
