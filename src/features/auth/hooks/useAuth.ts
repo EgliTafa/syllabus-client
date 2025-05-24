@@ -10,6 +10,7 @@ import {
   UserRole,
   UpdateProfileRequest,
   ChangePasswordRequest,
+  ChangePasswordResponse,
 } from "../core/_models";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
@@ -131,7 +132,11 @@ export const useAuth = () => {
       clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.updateProfile(data);
-      dispatch(setUser({ ...response, roles: response.roles ?? [] }));
+      dispatch(setUser({ 
+        ...response,
+        token: user?.token || '',
+        roles: user?.roles || []
+      }));
     } catch (error: any) {
       let errorMessage = "Profile update failed";
       
@@ -160,11 +165,12 @@ export const useAuth = () => {
     }
   };
 
-  const handleChangePassword = async (data: ChangePasswordRequest) => {
+  const handleChangePassword = async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
     try {
       clearError();
       dispatch(setIsFetching(true));
-      await authApi.changePassword(data);
+      const response = await authApi.changePassword(data);
+      return response;
     } catch (error: any) {
       let errorMessage = "Password change failed";
       

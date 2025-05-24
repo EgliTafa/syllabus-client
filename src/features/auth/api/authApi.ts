@@ -11,6 +11,7 @@ import {
   UpdateProfileRequest,
   UpdateProfileResponse,
   ChangePasswordRequest,
+  ChangePasswordResponse,
 } from '../core/_models';
 import { AuthInitializer } from '../core/AuthInitializer';
 import config from '../../../config';
@@ -125,7 +126,8 @@ export const authApi = {
     return response.data;
   },
 
-  changePassword: async (data: ChangePasswordRequest): Promise<void> => {
-    await api.post('/change-password', data);
+  changePassword: async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    const response = await api.post<ChangePasswordResponse>('/change-password', data);
+    return response.data;
   },
 }; 

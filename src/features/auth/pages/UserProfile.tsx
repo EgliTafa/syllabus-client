@@ -122,14 +122,32 @@ export const UserProfile = () => {
       return;
     }
     try {
-      await handleChangePassword(passwordData);
+      const response = await handleChangePassword(passwordData);
+      setUpdateStatus({
+        type: 'success',
+        message: response.message || 'Password changed successfully!',
+        show: true
+      });
+      // Clear password fields after successful change
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-    } catch (error) {
-      // Error is handled by the auth hook
+      // Clear any validation errors
+      setValidationErrors({});
+    } catch (error: any) {
+      setUpdateStatus({
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to change password. Please try again.',
+        show: true
+      });
+      // Clear only the new password fields on error
+      setPasswordData(prev => ({
+        ...prev,
+        newPassword: '',
+        confirmPassword: ''
+      }));
     }
   };
 

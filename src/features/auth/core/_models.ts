@@ -78,6 +78,11 @@ export interface ChangePasswordRequest {
   confirmPassword: string;
 }
 
+export interface ChangePasswordResponse {
+  message: string;
+  changedAt: string;
+}
+
 export interface User {
   id: string;
   firstName: string;
