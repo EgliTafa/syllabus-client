@@ -7,6 +7,7 @@ import { CourseDetails } from '../features/courses/pages/CourseDetails';
 import { CreateCourse } from '../features/courses/pages/CreateCourse';
 import { MainLayout } from './layouts/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { PublicRoute } from './components/PublicRoute';
 import { Login } from '../features/auth/pages/Login';
 import { Register } from '../features/auth/pages/Register';
 import { ForgotPassword } from '../features/auth/pages/ForgotPassword';
@@ -15,6 +16,7 @@ import { RoleGuard } from '../features/auth/components/RoleGuard';
 import { UnauthorizedPage } from '../features/auth/pages/UnauthorizedPage';
 import { UserRole } from '../features/auth/core/_models';
 import { RoleManagementPage } from '../features/admin/pages/RoleManagementPage';
+import { UserProfile } from '../features/auth/pages/UserProfile';
 
 export const router = createBrowserRouter([
   {
@@ -93,11 +95,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'login',
-        element: <Login />,
+        element: (
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        ),
       },
       {
         path: 'register',
-        element: <Register />,
+        element: (
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        ),
       },
       {
         path: 'forgot-password',
@@ -118,6 +128,14 @@ export const router = createBrowserRouter([
             <RoleGuard allowedRoles={[UserRole.Administrator]}>
               <RoleManagementPage />
             </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
           </ProtectedRoute>
         ),
       },

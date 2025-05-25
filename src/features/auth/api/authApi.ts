@@ -8,7 +8,10 @@ import {
   ForgotPasswordResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
-  UserRole
+  UpdateProfileRequest,
+  UpdateProfileResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
 } from '../core/_models';
 import { AuthInitializer } from '../core/AuthInitializer';
 import config from '../../../config';
@@ -115,6 +118,16 @@ export const authApi = {
 
   resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
     const response = await api.post<ResetPasswordResponse>('/reset-password', data);
+    return response.data;
+  },
+
+  updateProfile: async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
+    const response = await api.put<UpdateProfileResponse>('/profile', data);
+    return response.data;
+  },
+
+  changePassword: async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    const response = await api.post<ChangePasswordResponse>('/change-password', data);
     return response.data;
   },
 }; 

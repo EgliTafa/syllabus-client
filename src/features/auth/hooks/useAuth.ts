@@ -8,6 +8,9 @@ import {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   UserRole,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
 } from "../core/_models";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
@@ -19,6 +22,8 @@ interface AuthState {
     lastName: string;
     email: string;
     token: string;
+    phonePrefix?: string;
+    phoneNumber?: string;
     roles?: UserRole[];
   } | null;
   isAuthenticated: boolean;
@@ -42,7 +47,7 @@ export const useAuth = () => {
       clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.register(data);
-      dispatch(setUser(response));
+      dispatch(setUser({ ...response, roles: response.roles ?? [] }));
       localStorage.setItem("token", response.token);
       navigate("/syllabus");
     } catch (error: any) {
@@ -85,7 +90,7 @@ export const useAuth = () => {
       clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.login(data);
-      dispatch(setUser(response));
+      dispatch(setUser({ ...response, roles: response.roles ?? [] }));
       localStorage.setItem("token", response.token);
       navigate("/syllabus");
     } catch (error: any) {
@@ -120,6 +125,78 @@ export const useAuth = () => {
     dispatch(logout());
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  const handleUpdateProfile = async (data: UpdateProfileRequest) => {
+    try {
+      clearError();
+      dispatch(setIsFetching(true));
+      const response = await authApi.updateProfile(data);
+      dispatch(setUser({ 
+        ...response,
+        token: user?.token || '',
+        roles: user?.roles || []
+      }));
+    } catch (error: any) {
+      let errorMessage = "Profile update failed";
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = "Please check your input. All fields are required.";
+            break;
+          case 401:
+            errorMessage = "Your session has expired. Please log in again.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Profile update failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
+  };
+
+  const handleChangePassword = async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    try {
+      clearError();
+      dispatch(setIsFetching(true));
+      const response = await authApi.changePassword(data);
+      return response;
+    } catch (error: any) {
+      let errorMessage = "Password change failed";
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = "Please check your input. All fields are required.";
+            break;
+          case 401:
+            errorMessage = "Current password is incorrect.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Password change failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your internet connection.";
+      }
+      
+      dispatch(setError(errorMessage));
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
   };
 
   const handleForgotPassword = async (data: ForgotPasswordRequest) => {
@@ -182,9 +259,17 @@ export const useAuth = () => {
     return roles.every(role => hasRole(role));
   };
 
-  const isAdmin = (): boolean => hasRole(UserRole.Administrator);
-  const isProfessor = (): boolean => hasRole(UserRole.Professor);
-  const isStudent = (): boolean => hasRole(UserRole.Student);
+  const isAdmin = () => {
+    return user?.roles?.includes(UserRole.Administrator) ?? false;
+  };
+
+  const isProfessor = () => {
+    return user?.roles?.includes(UserRole.Professor) ?? false;
+  };
+
+  const isStudent = () => {
+    return user?.roles?.includes(UserRole.Student) ?? false;
+  };
 
   return {
     user,
@@ -195,6 +280,8 @@ export const useAuth = () => {
     handleRegister,
     handleLogin,
     handleLogout,
+    handleUpdateProfile,
+    handleChangePassword,
     handleForgotPassword,
     handleResetPassword,
     hasRole,
@@ -202,6 +289,6 @@ export const useAuth = () => {
     hasAllRoles,
     isAdmin,
     isProfessor,
-    isStudent
+    isStudent,
   };
 };

@@ -59,9 +59,9 @@ export const ResetPassword = () => {
 
     try {
       await handleResetPassword({
-        email: formData.email,
         token: formData.token,
-        newPassword: formData.newPassword
+        password: formData.newPassword,
+        confirmPassword: formData.confirmPassword
       });
       navigate('/login', { 
         state: { 

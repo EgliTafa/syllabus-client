@@ -1,3 +1,9 @@
+export enum UserRole {
+  Student = 'Student',
+  Professor = 'Professor',
+  Administrator = 'Administrator'
+}
+
 export interface RegisterUserRequest {
   firstName: string;
   lastName: string;
@@ -5,7 +11,6 @@ export interface RegisterUserRequest {
   password: string;
   phonePrefix: string;
   phoneNumber: string;
-  profilePictureUrl?: string;
 }
 
 export interface RegisterUserResponse {
@@ -14,7 +19,7 @@ export interface RegisterUserResponse {
   lastName: string;
   email: string;
   token: string;
-  roles: UserRole[];
+  roles?: UserRole[];
 }
 
 export interface LoginRequest {
@@ -28,7 +33,7 @@ export interface LoginResponse {
   lastName: string;
   email: string;
   token: string;
-  roles: UserRole[];
+  roles?: UserRole[];
 }
 
 export interface ForgotPasswordRequest {
@@ -40,19 +45,42 @@ export interface ForgotPasswordResponse {
 }
 
 export interface ResetPasswordRequest {
-  email: string;
   token: string;
-  newPassword: string;
+  password: string;
+  confirmPassword: string;
 }
 
 export interface ResetPasswordResponse {
   message: string;
 }
 
-export enum UserRole {
-  Student = 'Student',
-  Professor = 'Professor',
-  Administrator = 'Administrator'
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phonePrefix: string;
+  phoneNumber: string;
+}
+
+export interface UpdateProfileResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phonePrefix: string;
+  phoneNumber: string;
+  profilePictureUrl?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+  changedAt: string;
 }
 
 export interface User {
