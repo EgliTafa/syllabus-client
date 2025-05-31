@@ -162,20 +162,28 @@ export const CourseDetails = () => {
           width={{ xs: '100%', sm: 'auto' }}
         >
           <Button
-            variant="outlined"
+            variant="contained"
             color="secondary"
-            fullWidth={true}
             onClick={handleGenerateDocument}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
           >
-            Generate Course Document
+            Generate PDF
           </Button>
           <Button
             variant="contained"
-            startIcon={<EditIcon />}
-            fullWidth={true}
+            color="primary"
             onClick={openEditModal}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
           >
-            Edit Course
+            Edit
           </Button>
         </Box>
       </Box>
