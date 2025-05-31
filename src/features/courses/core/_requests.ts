@@ -41,4 +41,11 @@ export const addCourseDetails = async (courseId: number, details: CourseDetail):
 export const updateCourseDetails = async (courseId: number, details: CourseDetail): Promise<Course> => {
   const response = await api.put<Course>(`/${courseId}/details`, details);
   return response.data;
+};
+
+export const exportCoursePdf = async (courseId: number): Promise<Blob> => {
+  const response = await api.get<Blob>(`/${courseId}/export-pdf`, {
+    responseType: 'blob'
+  });
+  return response.data;
 }; 

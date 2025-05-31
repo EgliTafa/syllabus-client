@@ -20,6 +20,7 @@ import {
 import { useCourses } from '../hooks/useCourses';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import { exportCoursePdf } from '../core/_requests';
 
 export const CourseDetails = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -29,6 +30,8 @@ export const CourseDetails = () => {
   const [editForm, setEditForm] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -118,8 +121,25 @@ export const CourseDetails = () => {
     }
   };
 
-  const handleGenerateDocument = () => {
-    console.log('Generating course document...');
+  const handleGenerateDocument = async () => {
+    if (!selectedCourse) return;
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      const pdfBlob = await exportCoursePdf(selectedCourse.id);
+      const url = window.URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Course_${selectedCourse.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setExportError(err.message || 'Failed to export course PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isFetching) {
@@ -165,13 +185,14 @@ export const CourseDetails = () => {
             variant="contained"
             color="secondary"
             onClick={handleGenerateDocument}
+            disabled={isExporting}
             size="medium"
             sx={{ 
               minWidth: 'auto',
               px: 2
             }}
           >
-            Generate PDF
+            {isExporting ? 'Generating PDF...' : 'Generate PDF'}
           </Button>
           <Button
             variant="contained"
