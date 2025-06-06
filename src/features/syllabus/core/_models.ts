@@ -55,7 +55,6 @@ export interface CreateCourseRequest {
   practiceHours: number;
   courseTypeLabel?: string;
   examMethod?: string;
-  // Add other fields as needed
 }
   
 export interface UpdateSyllabusRequest {
