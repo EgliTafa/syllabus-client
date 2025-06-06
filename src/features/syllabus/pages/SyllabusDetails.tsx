@@ -16,13 +16,15 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { useGetSyllabusById } from '../hooks/useSyllabuses';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useDispatch } from 'react-redux';
 import { Course } from '../core/_models';
-import { updateSyllabus } from '../core/_requests';
+import { updateSyllabus, exportSyllabusPdf } from '../core/_requests';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -39,6 +41,8 @@ export const SyllabusDetails = () => {
   const [newName, setNewName] = useState(selectedSyllabus?.name || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (syllabusId) {
@@ -72,8 +76,35 @@ export const SyllabusDetails = () => {
     }
   };
 
-  const handleGenerateDocument = () => {
-    console.log('Generating syllabus document...');
+  const handleGenerateDocument = async () => {
+    if (!selectedSyllabus) return;
+    
+    setIsExporting(true);
+    setExportError(null);
+    
+    try {
+      const pdfBlob = await exportSyllabusPdf(selectedSyllabus.id);
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(pdfBlob);
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Syllabus_${selectedSyllabus.id}.pdf`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setExportError(err.message || 'Failed to export syllabus PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isFetching) {
@@ -125,20 +156,29 @@ export const SyllabusDetails = () => {
           width={{ xs: '100%', sm: 'auto' }}
         >
           <Button
-            variant="outlined"
+            variant="contained"
             color="secondary"
-            fullWidth={true}
             onClick={handleGenerateDocument}
+            disabled={isExporting}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
           >
-            Generate Syllabus Document
+            {isExporting ? 'Generating PDF...' : 'Generate PDF'}
           </Button>
           <Button
             variant="contained"
             color="primary"
-            fullWidth={true}
             onClick={handleEditClick}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
           >
-            Edit Syllabus
+            Edit
           </Button>
         </Box>
       </Box>
@@ -264,6 +304,16 @@ export const SyllabusDetails = () => {
           </Grid>
         </Box>
       </Paper>
+
+      <Snackbar 
+        open={!!exportError} 
+        autoHideDuration={6000} 
+        onClose={() => setExportError(null)}
+      >
+        <Alert onClose={() => setExportError(null)} severity="error">
+          {exportError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }; 

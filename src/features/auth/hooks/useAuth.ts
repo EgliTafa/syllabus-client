@@ -52,32 +52,40 @@ export const useAuth = () => {
       navigate("/syllabus");
     } catch (error: any) {
       let errorMessage = "Registration failed";
-      
+
       if (error.response) {
         // Handle specific error types
         switch (error.response.status) {
           case 400:
             if (error.response.data?.detail?.includes("conflict")) {
-              errorMessage = "This email is already registered. Please use a different email or try logging in.";
+              errorMessage =
+                "This email is already registered. Please use a different email or try logging in.";
             } else if (error.response.data?.detail?.includes("validation")) {
-              errorMessage = "Please check your input. All fields are required and password must be at least 8 characters.";
+              errorMessage =
+                "Please check your input. All fields are required and password must be at least 8 characters.";
             } else {
-              errorMessage = error.response.data?.detail || "Invalid registration data. Please check your input.";
+              errorMessage =
+                error.response.data?.detail ||
+                "Invalid registration data. Please check your input.";
             }
             break;
           case 409:
-            errorMessage = "This email is already registered. Please use a different email or try logging in.";
+            errorMessage =
+              "This email is already registered. Please use a different email or try logging in.";
             break;
           case 500:
             errorMessage = "Server error. Please try again later.";
             break;
           default:
-            errorMessage = error.response.data?.message || "Registration failed. Please try again.";
+            errorMessage =
+              error.response.data?.message ||
+              "Registration failed. Please try again.";
         }
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your internet connection.";
+        errorMessage =
+          "No response from server. Please check your internet connection.";
       }
-      
+
       dispatch(setError(errorMessage));
       throw error;
     } finally {
@@ -95,25 +103,28 @@ export const useAuth = () => {
       navigate("/syllabus");
     } catch (error: any) {
       let errorMessage = "Login failed";
-      
+
       if (error.response) {
         switch (error.response.status) {
           case 401:
             errorMessage = "Invalid email or password. Please try again.";
             break;
           case 400:
-            errorMessage = "Please check your input. Email and password are required.";
+            errorMessage =
+              "Please check your input. Email and password are required.";
             break;
           case 500:
             errorMessage = "Server error. Please try again later.";
             break;
           default:
-            errorMessage = error.response.data?.message || "Login failed. Please try again.";
+            errorMessage =
+              error.response.data?.message || "Login failed. Please try again.";
         }
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your internet connection.";
+        errorMessage =
+          "No response from server. Please check your internet connection.";
       }
-      
+
       dispatch(setError(errorMessage));
       throw error;
     } finally {
@@ -132,14 +143,16 @@ export const useAuth = () => {
       clearError();
       dispatch(setIsFetching(true));
       const response = await authApi.updateProfile(data);
-      dispatch(setUser({ 
-        ...response,
-        token: user?.token || '',
-        roles: user?.roles || []
-      }));
+      dispatch(
+        setUser({
+          ...response,
+          token: user?.token || "",
+          roles: user?.roles || [],
+        })
+      );
     } catch (error: any) {
       let errorMessage = "Profile update failed";
-      
+
       if (error.response) {
         switch (error.response.status) {
           case 400:
@@ -152,12 +165,15 @@ export const useAuth = () => {
             errorMessage = "Server error. Please try again later.";
             break;
           default:
-            errorMessage = error.response.data?.message || "Profile update failed. Please try again.";
+            errorMessage =
+              error.response.data?.message ||
+              "Profile update failed. Please try again.";
         }
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your internet connection.";
+        errorMessage =
+          "No response from server. Please check your internet connection.";
       }
-      
+
       dispatch(setError(errorMessage));
       throw error;
     } finally {
@@ -165,7 +181,9 @@ export const useAuth = () => {
     }
   };
 
-  const handleChangePassword = async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+  const handleChangePassword = async (
+    data: ChangePasswordRequest
+  ): Promise<ChangePasswordResponse> => {
     try {
       clearError();
       dispatch(setIsFetching(true));
@@ -173,7 +191,7 @@ export const useAuth = () => {
       return response;
     } catch (error: any) {
       let errorMessage = "Password change failed";
-      
+
       if (error.response) {
         switch (error.response.status) {
           case 400:
@@ -186,12 +204,15 @@ export const useAuth = () => {
             errorMessage = "Server error. Please try again later.";
             break;
           default:
-            errorMessage = error.response.data?.message || "Password change failed. Please try again.";
+            errorMessage =
+              error.response.data?.message ||
+              "Password change failed. Please try again.";
         }
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your internet connection.";
+        errorMessage =
+          "No response from server. Please check your internet connection.";
       }
-      
+
       dispatch(setError(errorMessage));
       throw error;
     } finally {
@@ -207,7 +228,7 @@ export const useAuth = () => {
       return true;
     } catch (error: any) {
       let errorMessage = "Failed to send reset email";
-      
+
       if (error.response) {
         switch (error.response.status) {
           case 404:
@@ -220,12 +241,15 @@ export const useAuth = () => {
             errorMessage = "Server error. Please try again later.";
             break;
           default:
-            errorMessage = error.response.data?.message || "Failed to send reset email. Please try again.";
+            errorMessage =
+              error.response.data?.message ||
+              "Failed to send reset email. Please try again.";
         }
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your internet connection.";
+        errorMessage =
+          "No response from server. Please check your internet connection.";
       }
-      
+
       dispatch(setError(errorMessage));
       throw error;
     } finally {
@@ -252,11 +276,11 @@ export const useAuth = () => {
   };
 
   const hasAnyRole = (roles: UserRole[]): boolean => {
-    return roles.some(role => hasRole(role));
+    return roles.some((role) => hasRole(role));
   };
 
   const hasAllRoles = (roles: UserRole[]): boolean => {
-    return roles.every(role => hasRole(role));
+    return roles.every((role) => hasRole(role));
   };
 
   const isAdmin = () => {

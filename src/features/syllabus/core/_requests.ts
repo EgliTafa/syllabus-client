@@ -42,3 +42,10 @@ export const addOrRemoveCoursesFromSyllabus = async (
   );
   return response.data;
 };
+
+export const exportSyllabusPdf = async (syllabusId: number): Promise<Blob> => {
+  const response = await api.get<Blob>(`/${syllabusId}/export-pdf`, {
+    responseType: 'blob'
+  });
+  return response.data;
+};
