@@ -1,7 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSyllabuses, fetchSyllabusById } from "../core/_requests";
-import { Syllabus } from "../core/_models";
 import {
   setSyllabusList,
   setSelectedSyllabus,
@@ -77,40 +76,4 @@ export const useGetSyllabusById = (syllabusId?: number) => {
   }, [syllabusId]);
 
   return { selectedSyllabus, isFetching, fetchAndUpdateSyllabusById };
-};
-
-export const useSyllabusesByAcademicYear = () => {
-  const dispatch = useDispatch();
-  const { syllabusList, isFetching, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
-
-  useEffect(() => {
-    fetchAndUpdateSyllabuses(dispatch);
-  }, [dispatch, fetchAndUpdateSyllabuses]);
-
-  const syllabusesByYear = useMemo(() => {
-    if (!syllabusList) return new Map<string, Syllabus[]>();
-
-    return syllabusList.reduce((acc, syllabus) => {
-      const year = syllabus.academicYear;
-      if (!acc.has(year)) {
-        acc.set(year, []);
-      }
-      acc.get(year)?.push(syllabus);
-      return acc;
-    }, new Map<string, Syllabus[]>());
-  }, [syllabusList]);
-
-  const sortedYears = useMemo(() => {
-    return Array.from(syllabusesByYear.keys()).sort((a, b) => {
-      const [aStart] = a.split('-').map(Number);
-      const [bStart] = b.split('-').map(Number);
-      return bStart - aStart; // Sort in descending order (newest first)
-    });
-  }, [syllabusesByYear]);
-
-  return {
-    syllabusesByYear,
-    sortedYears,
-    isFetching
-  };
 };

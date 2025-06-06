@@ -30,7 +30,9 @@ export const updateCourse = async (course: UpdateCourseRequest): Promise<Course>
 };
 
 export const deleteCourse = async (courseId: number): Promise<void> => {
-  await api.delete(`/${courseId}`);
+  await api.delete(`/${courseId}`, {
+    data: { courseId }
+  });
 };
 
 export const addCourseDetails = async (courseId: number, details: CourseDetail): Promise<Course> => {
