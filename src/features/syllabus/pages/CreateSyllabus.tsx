@@ -21,6 +21,7 @@ import { CreateSyllabusRequest, CreateCourseRequest } from '../core/_models';
 export const CreateSyllabus = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
   const [courses, setCourses] = useState<CreateCourseRequest[]>([]);
   const [newCourse, setNewCourse] = useState<CreateCourseRequest>({
     title: '',
@@ -62,7 +63,7 @@ export const CreateSyllabus = () => {
   };
 
   const handleSubmit = async () => {
-    if (!name || courses.length === 0) return;
+    if (!name || !academicYear || courses.length === 0) return;
 
     // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
     const mappedCourses = courses.map((course) => {
@@ -79,6 +80,7 @@ export const CreateSyllabus = () => {
 
     const syllabusData: CreateSyllabusRequest = {
       name,
+      academicYear,
       courses: mappedCourses as any
     };
 
@@ -108,6 +110,15 @@ export const CreateSyllabus = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           margin="normal"
+        />
+
+        <TextField
+          fullWidth
+          label="Academic Year (e.g., 2023-2024)"
+          value={academicYear}
+          onChange={(e) => setAcademicYear(e.target.value)}
+          margin="normal"
+          placeholder="2023-2024"
         />
 
         <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
@@ -241,7 +252,7 @@ export const CreateSyllabus = () => {
             variant="contained"
             color="primary"
             onClick={handleSubmit}
-            disabled={!name || courses.length === 0}
+            disabled={!name || !academicYear || courses.length === 0}
           >
             Create Syllabus
           </Button>

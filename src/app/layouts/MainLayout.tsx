@@ -16,6 +16,7 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  ListItemIcon,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -24,22 +25,34 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { ThemeToggle } from "../components";
+import { useSyllabusesByAcademicYear } from "../../features/syllabus/hooks/useSyllabuses";
+import SchoolIcon from '@mui/icons-material/School';
 
 export const MainLayout = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { handleLogout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [syllabusMenuAnchorEl, setSyllabusMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { syllabusesByYear, sortedYears, isFetching } = useSyllabusesByAcademicYear();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
+  const handleSyllabusMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setSyllabusMenuAnchorEl(event.currentTarget);
+  };
+
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleSyllabusMenuClose = () => {
+    setSyllabusMenuAnchorEl(null);
   };
 
   const handleLogoutClick = () => {
@@ -126,7 +139,11 @@ export const MainLayout = () => {
             <>
               {!isMobile && (
                 <>
-                  <Button color="inherit" component={RouterLink} to="/syllabus">
+                  <Button 
+                    color="inherit" 
+                    onClick={handleSyllabusMenu}
+                    startIcon={<SchoolIcon />}
+                  >
                     Syllabuses
                   </Button>
                   {isAdmin() && (
@@ -190,6 +207,49 @@ export const MainLayout = () => {
                   Profile
                 </MenuItem>
                 <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
+              </Menu>
+
+              <Menu
+                id="syllabus-menu"
+                anchorEl={syllabusMenuAnchorEl}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                open={Boolean(syllabusMenuAnchorEl)}
+                onClose={handleSyllabusMenuClose}
+              >
+                <MenuItem
+                  component={RouterLink}
+                  to="/syllabus"
+                  onClick={handleSyllabusMenuClose}
+                >
+                  All Syllabuses
+                </MenuItem>
+                <MenuItem
+                  component={RouterLink}
+                  to="/syllabus/create"
+                  onClick={handleSyllabusMenuClose}
+                >
+                  Create New Syllabus
+                </MenuItem>
+                <Divider />
+                {sortedYears.map((year) => (
+                  <MenuItem
+                    key={year}
+                    onClick={() => {
+                      handleSyllabusMenuClose();
+                      navigate(`/syllabus?year=${year}`);
+                    }}
+                  >
+                    {year}
+                  </MenuItem>
+                ))}
               </Menu>
             </>
           ) : (

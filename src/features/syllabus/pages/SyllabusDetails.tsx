@@ -18,7 +18,8 @@ import {
   TableHead,
   TableRow,
   Snackbar,
-  Alert
+  Alert,
+  TextField
 } from '@mui/material';
 import { useGetSyllabusById } from '../hooks/useSyllabuses';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -39,6 +40,7 @@ export const SyllabusDetails = () => {
   );
   const [editMode, setEditMode] = useState(false);
   const [newName, setNewName] = useState(selectedSyllabus?.name || '');
+  const [newAcademicYear, setNewAcademicYear] = useState(selectedSyllabus?.academicYear || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -52,6 +54,7 @@ export const SyllabusDetails = () => {
 
   const handleEditClick = () => {
     setNewName(selectedSyllabus?.name || '');
+    setNewAcademicYear(selectedSyllabus?.academicYear || '');
     setEditMode(true);
   };
 
@@ -66,7 +69,11 @@ export const SyllabusDetails = () => {
     setIsUpdating(true);
     setError(null);
     try {
-      await updateSyllabus({ syllabusId: selectedSyllabus.id, name: newName });
+      await updateSyllabus({ 
+        syllabusId: selectedSyllabus.id, 
+        name: newName,
+        academicYear: newAcademicYear
+      });
       fetchAndUpdateSyllabusById(selectedSyllabus.id, dispatch);
       setEditMode(false);
     } catch (err: any) {
@@ -183,14 +190,24 @@ export const SyllabusDetails = () => {
         </Box>
       </Box>
       <Dialog open={editMode} onClose={handleEditCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Syllabus Name</DialogTitle>
+        <DialogTitle>Edit Syllabus</DialogTitle>
         <form onSubmit={handleEditSubmit}>
           <DialogContent>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Syllabus Name"
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              style={{ width: '100%', padding: 8, fontSize: 16, marginBottom: 16 }}
+              margin="normal"
+              disabled={isUpdating}
+            />
+            <TextField
+              fullWidth
+              label="Academic Year (e.g., 2023-2024)"
+              value={newAcademicYear}
+              onChange={e => setNewAcademicYear(e.target.value)}
+              margin="normal"
+              placeholder="2023-2024"
               disabled={isUpdating}
             />
             {error && <Typography color="error" variant="body2">{error}</Typography>}
@@ -205,7 +222,7 @@ export const SyllabusDetails = () => {
       <Paper sx={{ p: 4 }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-            {selectedSyllabus.name}
+            {selectedSyllabus.name} ({selectedSyllabus.academicYear})
           </Typography>
           <Typography variant="h6" color="textSecondary">
             Study Program
