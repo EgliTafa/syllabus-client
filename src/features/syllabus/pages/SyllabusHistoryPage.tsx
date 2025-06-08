@@ -36,15 +36,15 @@ export const SyllabusHistoryPage = () => {
 
   return (
     <Box p={3}>
-      <Box display="flex" alignItems="center" mb={3}>
+      <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/syllabus')}
-          sx={{ mr: 2 }}
+          sx={{ alignSelf: 'flex-start', mb: 2 }}
         >
           Back to List
         </Button>
-        <Typography variant="h4">
+        <Typography variant="h4" align="center">
           Syllabuses for Academic Year {academicYear}
         </Typography>
       </Box>

@@ -16,28 +16,42 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Collapse,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { ThemeToggle } from "../components";
-import { SyllabusHistory } from "../../features/syllabus/components/SyllabusHistory";
+import { useGetAllSyllabuses } from "../../features/syllabus/hooks/useSyllabuses";
+import { useDispatch } from "react-redux";
+import { SyllabusHistoryDropdown } from "../../features/syllabus/components/SyllabusHistoryDropdown";
 
 export const MainLayout = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { handleLogout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { syllabusList, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAndUpdateSyllabuses(dispatch);
+    }
+  }, [isAuthenticated, fetchAndUpdateSyllabuses, dispatch]);
+
+  // Get unique academic years and sort them in ascending order
+  const academicYears = Array.from(new Set(syllabusList.map((s) => s.academicYear)))
+    .sort((a, b) => {
+      const yearA = parseInt(a.split('-')[0]);
+      const yearB = parseInt(b.split('-')[0]);
+      return yearA - yearB;
+    });
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -65,10 +79,6 @@ export const MainLayout = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const handleHistoryClick = () => {
-    setHistoryOpen(!historyOpen);
-  };
-
   const renderMobileMenu = () => (
     <Drawer
       anchor="right"
@@ -82,20 +92,20 @@ export const MainLayout = () => {
               <ListItem component={RouterLink} to="/syllabus" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Syllabuses" />
               </ListItem>
-              <ListItem 
-                onClick={handleHistoryClick}
-                sx={{ cursor: 'pointer' }}
-              >
-                <ListItemText primary="Syllabus History" />
-                {historyOpen ? <ExpandLess /> : <ExpandMore />}
+              <ListItem>
+                <ListItemText primary="Syllabus History" primaryTypographyProps={{ fontWeight: 'bold' }} />
               </ListItem>
-              <Collapse in={historyOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  <ListItem sx={{ pl: 4 }}>
-                    <SyllabusHistory />
-                  </ListItem>
-                </List>
-              </Collapse>
+              {academicYears.map((year) => (
+                <ListItem
+                  key={year}
+                  component={RouterLink}
+                  to={`/syllabus/history/${year}`}
+                  onClick={handleMobileMenuToggle}
+                  sx={{ pl: 4 }}
+                >
+                  <ListItemText primary={year} />
+                </ListItem>
+              ))}
               {isAdmin() && (
                 <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
                   <ListItemText primary="Admin Role Assignment" />
@@ -152,7 +162,7 @@ export const MainLayout = () => {
                   <Button color="inherit" component={RouterLink} to="/syllabus">
                     Syllabuses
                   </Button>
-                  <SyllabusHistory />
+                  <SyllabusHistoryDropdown />
                   {isAdmin() && (
                     <Button
                       color="inherit"

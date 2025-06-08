@@ -68,24 +68,24 @@ export const CreateSyllabus = () => {
       return;
     }
 
-      setCourses([
-        ...courses,
-        { ...newCourse }
-      ]);
+    setCourses([
+      ...courses,
+      { ...newCourse }
+    ]);
 
     // Reset form
-      setNewCourse({
-        title: '',
-        code: '',
-        semester: 1,
-        credits: 0,
-        lectureHours: 0,
-        seminarHours: 0,
-        labHours: 0,
-        practiceHours: 0,
-        courseTypeLabel: 'B',
-        examMethod: 'P',
-      });
+    setNewCourse({
+      title: '',
+      code: '',
+      semester: 1,
+      credits: 0,
+      lectureHours: 0,
+      seminarHours: 0,
+      labHours: 0,
+      practiceHours: 0,
+      courseTypeLabel: 'B',
+      examMethod: 'P',
+    });
   };
 
   const handleRemoveCourse = (index: number) => {
@@ -100,28 +100,28 @@ export const CreateSyllabus = () => {
     setIsSubmitting(true);
 
     try {
-    // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
-    const mappedCourses = courses.map((course) => {
-      const { practiceHours, courseTypeLabel, examMethod, ...rest } = course;
-      return {
-        ...rest,
-        detail: {
-          practiceHours,
-          courseTypeLabel,
-          examMethod
-        }
-      };
-    });
+      // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
+      const mappedCourses = courses.map((course) => {
+        const { practiceHours, courseTypeLabel, examMethod, ...rest } = course;
+        return {
+          ...rest,
+          detail: {
+            practiceHours,
+            courseTypeLabel,
+            examMethod
+          }
+        };
+      });
 
-    const syllabusData: CreateSyllabusRequest = {
-      name,
+      const syllabusData: CreateSyllabusRequest = {
+        name,
         academicYear,
-      courses: mappedCourses as any
-    };
+        courses: mappedCourses as any
+      };
 
-    // TODO: Implement API call to create syllabus
-    console.log('Creating syllabus:', syllabusData);
-    navigate('/syllabus');
+      // TODO: Implement API call to create syllabus
+      console.log('Creating syllabus:', syllabusData);
+      navigate('/syllabus');
     } catch (error) {
       console.error('Error creating syllabus:', error);
     } finally {
@@ -146,11 +146,11 @@ export const CreateSyllabus = () => {
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'grid', gap: 3 }}>
-        <TextField
-          fullWidth
-          label="Syllabus Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+            <TextField
+              fullWidth
+              label="Syllabus Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
             />
             <AcademicYearSelect

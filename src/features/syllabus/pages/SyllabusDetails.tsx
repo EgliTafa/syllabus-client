@@ -307,7 +307,7 @@ export const SyllabusDetails = () => {
       </Box>
       <Dialog open={isEditDialogOpen} onClose={handleEditCancel}>
         <DialogTitle>Edit Syllabus</DialogTitle>
-          <DialogContent>
+        <DialogContent>
           <Box sx={{ display: 'grid', gap: 2, pt: 1 }}>
             <TextField
               fullWidth
@@ -430,8 +430,8 @@ export const SyllabusDetails = () => {
           <Typography>
             Are you sure you want to delete this syllabus? This action cannot be undone.
           </Typography>
-          </DialogContent>
-          <DialogActions>
+        </DialogContent>
+        <DialogActions>
           <Button 
             onClick={() => setIsDeleteDialogOpen(false)}
             disabled={isDeleting}
@@ -446,7 +446,7 @@ export const SyllabusDetails = () => {
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>
-          </DialogActions>
+        </DialogActions>
       </Dialog>
 
       <Paper sx={{ p: 4 }}>
