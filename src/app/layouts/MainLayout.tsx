@@ -16,12 +16,15 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  Collapse,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useState } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { ThemeToggle } from "../components";
 import { SyllabusHistory } from "../../features/syllabus/components/SyllabusHistory";
@@ -32,6 +35,7 @@ export const MainLayout = () => {
   const { handleLogout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -61,6 +65,10 @@ export const MainLayout = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  const handleHistoryClick = () => {
+    setHistoryOpen(!historyOpen);
+  };
+
   const renderMobileMenu = () => (
     <Drawer
       anchor="right"
@@ -74,6 +82,20 @@ export const MainLayout = () => {
               <ListItem component={RouterLink} to="/syllabus" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Syllabuses" />
               </ListItem>
+              <ListItem 
+                onClick={handleHistoryClick}
+                sx={{ cursor: 'pointer' }}
+              >
+                <ListItemText primary="Syllabus History" />
+                {historyOpen ? <ExpandLess /> : <ExpandMore />}
+              </ListItem>
+              <Collapse in={historyOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <ListItem sx={{ pl: 4 }}>
+                    <SyllabusHistory />
+                  </ListItem>
+                </List>
+              </Collapse>
               {isAdmin() && (
                 <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
                   <ListItemText primary="Admin Role Assignment" />
