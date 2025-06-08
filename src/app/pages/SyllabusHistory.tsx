@@ -28,9 +28,11 @@ import {
 import { useGetAllSyllabuses } from '../../features/syllabus/hooks/useSyllabuses';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { Syllabus } from '../../features/syllabus/core/_models';
+import { deleteSyllabus } from '../../features/syllabus/core/_requests';
 
 const SyllabusHistory: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { syllabusList, isFetching, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
   const { user, isAdmin } = useAuth();
   const [selectedYear, setSelectedYear] = useState<string>('');
@@ -39,8 +41,8 @@ const SyllabusHistory: React.FC = () => {
   const [syllabusToDelete, setSyllabusToDelete] = useState<Syllabus | null>(null);
 
   useEffect(() => {
-    fetchAndUpdateSyllabuses();
-  }, [fetchAndUpdateSyllabuses, user]);
+    fetchAndUpdateSyllabuses(dispatch);
+  }, [fetchAndUpdateSyllabuses, dispatch, user]);
 
   useEffect(() => {
     if (selectedYear) {
@@ -60,7 +62,7 @@ const SyllabusHistory: React.FC = () => {
     if (syllabusToDelete) {
       try {
         await deleteSyllabus(syllabusToDelete.id);
-        fetchAndUpdateSyllabuses();
+        fetchAndUpdateSyllabuses(dispatch);
         setDeleteDialogOpen(false);
         setSyllabusToDelete(null);
       } catch (error) {
