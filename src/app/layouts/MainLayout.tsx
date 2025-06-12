@@ -19,20 +19,39 @@ import {
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../features/auth/hooks/useAuth";
 import { ThemeToggle } from "../components";
+import { useGetAllSyllabuses } from "../../features/syllabus/hooks/useSyllabuses";
+import { useDispatch } from "react-redux";
+import { SyllabusHistoryDropdown } from "../../features/syllabus/components/SyllabusHistoryDropdown";
 
 export const MainLayout = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { handleLogout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { syllabusList, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAndUpdateSyllabuses(dispatch);
+    }
+  }, [isAuthenticated, fetchAndUpdateSyllabuses, dispatch]);
+
+  // Get unique academic years and sort them in ascending order
+  const academicYears = Array.from(new Set(syllabusList.map((s) => s.academicYear)))
+    .sort((a, b) => {
+      const yearA = parseInt(a.split('-')[0]);
+      const yearB = parseInt(b.split('-')[0]);
+      return yearA - yearB;
+    });
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -73,6 +92,20 @@ export const MainLayout = () => {
               <ListItem component={RouterLink} to="/syllabus" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Syllabuses" />
               </ListItem>
+              <ListItem>
+                <ListItemText primary="Syllabus History" primaryTypographyProps={{ fontWeight: 'bold' }} />
+              </ListItem>
+              {academicYears.map((year) => (
+                <ListItem
+                  key={year}
+                  component={RouterLink}
+                  to={`/syllabus/history/${year}`}
+                  onClick={handleMobileMenuToggle}
+                  sx={{ pl: 4 }}
+                >
+                  <ListItemText primary={year} />
+                </ListItem>
+              ))}
               {isAdmin() && (
                 <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
                   <ListItemText primary="Admin Role Assignment" />
@@ -129,6 +162,7 @@ export const MainLayout = () => {
                   <Button color="inherit" component={RouterLink} to="/syllabus">
                     Syllabuses
                   </Button>
+                  <SyllabusHistoryDropdown />
                   {isAdmin() && (
                     <Button
                       color="inherit"

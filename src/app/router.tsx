@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { SyllabusList } from '../features/syllabus/pages/SyllabusList';
 import { SyllabusDetails } from '../features/syllabus/pages/SyllabusDetails';
 import { CreateSyllabus } from '../features/syllabus/pages/CreateSyllabus';
+import { SyllabusHistoryPage } from '../features/syllabus/pages/SyllabusHistoryPage';
 import { CourseList } from '../features/courses/pages/CourseList';
 import { CourseDetails } from '../features/courses/pages/CourseDetails';
 import { CreateCourse } from '../features/courses/pages/CreateCourse';
@@ -39,6 +40,16 @@ export const router = createBrowserRouter([
           <ProtectedRoute>
             <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
               <SyllabusList />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'syllabus/history/:academicYear',
+        element: (
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <SyllabusHistoryPage />
             </RoleGuard>
           </ProtectedRoute>
         ),

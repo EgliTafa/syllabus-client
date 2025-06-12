@@ -34,13 +34,15 @@ export interface Course {
 export interface Syllabus {
     id: number;
     name: string;
-  courses: Course[];
-  }
+    academicYear: string;
+    courses: Course[];
+}
   
 export interface CreateSyllabusRequest {
     name: string;
-  courses: CreateCourseRequest[];
-  }
+    academicYear: string;
+    courses: CreateCourseRequest[];
+}
   
 export interface CreateCourseRequest {
   title: string;
@@ -53,19 +55,19 @@ export interface CreateCourseRequest {
   practiceHours: number;
   courseTypeLabel?: string;
   examMethod?: string;
-  // Add other fields as needed
-  }
+}
   
 export interface UpdateSyllabusRequest {
     syllabusId: number;
     name: string;
-  }
+    academicYear: string;
+}
   
 export interface AddOrRemoveCoursesFromSyllabusRequest {
     syllabusId: number;
     courseIdsToAdd: number[];
     courseIdsToRemove: number[];
-  }
+}
 
 export interface ListAllSyllabusesResponse {
   syllabuses: Syllabus[];

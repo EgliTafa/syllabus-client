@@ -20,7 +20,8 @@ import {
 import { useCourses } from '../hooks/useCourses';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
-import { exportCoursePdf } from '../core/_requests';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { exportCoursePdf, deleteCourse } from '../core/_requests';
 
 export const CourseDetails = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -32,6 +33,9 @@ export const CourseDetails = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (courseId) {
@@ -142,6 +146,25 @@ export const CourseDetails = () => {
     }
   };
 
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCourse) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteCourse(selectedCourse.id);
+      navigate('/courses');
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to delete course');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   if (isFetching) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
@@ -205,6 +228,19 @@ export const CourseDetails = () => {
             }}
           >
             Edit
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteClick}
+            startIcon={<DeleteIcon />}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
+          >
+            Delete
           </Button>
         </Box>
       </Box>
@@ -351,6 +387,41 @@ export const CourseDetails = () => {
             <Button type="submit" variant="contained" color="primary" disabled={isSaving}>Save</Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Delete Course</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this course? This action cannot be undone.
+            The course will be removed from all syllabuses and deleted from the database.
+          </Typography>
+          {deleteError && (
+            <Typography color="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setIsDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm}
+            color="error"
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

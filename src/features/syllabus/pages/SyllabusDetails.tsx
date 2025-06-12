@@ -18,17 +18,24 @@ import {
   TableHead,
   TableRow,
   Snackbar,
-  Alert
+  Alert,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { useGetSyllabusById } from '../hooks/useSyllabuses';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch } from 'react-redux';
 import { Course } from '../core/_models';
-import { updateSyllabus, exportSyllabusPdf } from '../core/_requests';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+import { updateSyllabus, exportSyllabusPdf, addOrRemoveCoursesFromSyllabus, deleteSyllabus } from '../core/_requests';
+import { AcademicYearSelect } from '../components/AcademicYearSelect';
+import { CourseSelectionDialog } from '../components/CourseSelectionDialog';
 
 export const SyllabusDetails = () => {
   const { syllabusId } = useParams<{ syllabusId: string }>();
@@ -39,10 +46,20 @@ export const SyllabusDetails = () => {
   );
   const [editMode, setEditMode] = useState(false);
   const [newName, setNewName] = useState(selectedSyllabus?.name || '');
+  const [newAcademicYear, setNewAcademicYear] = useState(selectedSyllabus?.academicYear || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddCourseDialogOpen, setIsAddCourseDialogOpen] = useState(false);
+  const [selectedCoursesToAdd, setSelectedCoursesToAdd] = useState<number[]>([]);
+  const [selectedCoursesToRemove, setSelectedCoursesToRemove] = useState<number[]>([]);
+  const [isUpdatingCourses, setIsUpdatingCourses] = useState(false);
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (syllabusId) {
@@ -52,12 +69,15 @@ export const SyllabusDetails = () => {
 
   const handleEditClick = () => {
     setNewName(selectedSyllabus?.name || '');
+    setNewAcademicYear(selectedSyllabus?.academicYear || '');
     setEditMode(true);
+    setIsEditDialogOpen(true);
   };
 
   const handleEditCancel = () => {
     setEditMode(false);
     setError(null);
+    setIsEditDialogOpen(false);
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -66,9 +86,14 @@ export const SyllabusDetails = () => {
     setIsUpdating(true);
     setError(null);
     try {
-      await updateSyllabus({ syllabusId: selectedSyllabus.id, name: newName });
+      await updateSyllabus({ 
+        syllabusId: selectedSyllabus.id, 
+        name: newName,
+        academicYear: newAcademicYear
+      });
       fetchAndUpdateSyllabusById(selectedSyllabus.id, dispatch);
       setEditMode(false);
+      setIsEditDialogOpen(false);
     } catch (err: any) {
       setError(err.message || 'Failed to update syllabus');
     } finally {
@@ -104,6 +129,78 @@ export const SyllabusDetails = () => {
       setExportError(err.message || 'Failed to export syllabus PDF');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleAddCourseClick = () => {
+    setIsAddCourseDialogOpen(true);
+  };
+
+  const handleRemoveCourse = (courseId: number) => {
+    setSelectedCoursesToRemove([...selectedCoursesToRemove, courseId]);
+  };
+
+  const handleAddCourses = async () => {
+    if (!selectedSyllabus) return;
+    
+    setIsUpdatingCourses(true);
+    try {
+      await addOrRemoveCoursesFromSyllabus({
+        syllabusId: selectedSyllabus.id,
+        courseIdsToAdd: selectedCoursesToAdd,
+        courseIdsToRemove: selectedCoursesToRemove
+      });
+      
+      // Refresh syllabus data
+      fetchAndUpdateSyllabusById(selectedSyllabus.id, dispatch);
+      
+      // Reset state
+      setSelectedCoursesToAdd([]);
+      setSelectedCoursesToRemove([]);
+      setIsAddCourseDialogOpen(false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update courses');
+    } finally {
+      setIsUpdatingCourses(false);
+    }
+  };
+
+  const fetchAvailableCourses = async () => {
+    setIsLoadingCourses(true);
+    try {
+      // TODO: Replace with actual API call to get available courses
+      const response = await fetch('/api/Course');
+      const data = await response.json();
+      setAvailableCourses(data);
+    } catch (err) {
+      console.error('Error fetching available courses:', err);
+    } finally {
+      setIsLoadingCourses(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAddCourseDialogOpen) {
+      fetchAvailableCourses();
+    }
+  }, [isAddCourseDialogOpen]);
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedSyllabus) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteSyllabus(selectedSyllabus.id);
+      navigate('/syllabus');
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete syllabus');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -180,32 +277,182 @@ export const SyllabusDetails = () => {
           >
             Edit
           </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleAddCourseClick}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
+          >
+            Add Courses
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteClick}
+            size="medium"
+            sx={{ 
+              minWidth: 'auto',
+              px: 2
+            }}
+          >
+            Delete
+          </Button>
         </Box>
       </Box>
-      <Dialog open={editMode} onClose={handleEditCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Syllabus Name</DialogTitle>
-        <form onSubmit={handleEditSubmit}>
-          <DialogContent>
-            <input
-              type="text"
+      <Dialog open={isEditDialogOpen} onClose={handleEditCancel}>
+        <DialogTitle>Edit Syllabus</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'grid', gap: 2, pt: 1 }}>
+            <TextField
+              fullWidth
+              label="Syllabus Name"
               value={newName}
-              onChange={e => setNewName(e.target.value)}
-              style={{ width: '100%', padding: 8, fontSize: 16, marginBottom: 16 }}
-              disabled={isUpdating}
+              onChange={(e) => setNewName(e.target.value)}
+              required
             />
-            {error && <Typography color="error" variant="body2">{error}</Typography>}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleEditCancel} disabled={isUpdating}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary" disabled={isUpdating}>Save</Button>
-          </DialogActions>
-        </form>
+            <AcademicYearSelect
+              value={newAcademicYear}
+              onChange={setNewAcademicYear}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditCancel}>Cancel</Button>
+          <Button 
+            onClick={handleEditSubmit} 
+            variant="contained" 
+            color="primary"
+            disabled={!newName || !newAcademicYear}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog 
+        open={isAddCourseDialogOpen} 
+        onClose={() => setIsAddCourseDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Add or Remove Courses</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Available Courses
+            </Typography>
+            {isLoadingCourses ? (
+              <Box display="flex" justifyContent="center" p={3}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <CourseSelectionDialog
+                availableCourses={availableCourses.filter(
+                  course => !selectedSyllabus?.courses.some(c => c.id === course.id)
+                )}
+                selectedCourseIds={selectedCoursesToAdd}
+                onSelectionChange={setSelectedCoursesToAdd}
+              />
+            )}
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+              Current Courses
+            </Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Course</TableCell>
+                    <TableCell>Code</TableCell>
+                    <TableCell>Semester</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedSyllabus?.courses.map((course) => (
+                    <TableRow key={course.id}>
+                      <TableCell>{course.title}</TableCell>
+                      <TableCell>{course.code}</TableCell>
+                      <TableCell>{course.semester}</TableCell>
+                      <TableCell>
+                        <Tooltip title="Remove Course">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveCourse(course.id)}
+                            disabled={isUpdatingCourses}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setIsAddCourseDialogOpen(false);
+              setSelectedCoursesToAdd([]);
+              setSelectedCoursesToRemove([]);
+            }}
+            disabled={isUpdatingCourses}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddCourses}
+            variant="contained"
+            color="primary"
+            disabled={isUpdatingCourses || (selectedCoursesToAdd.length === 0 && selectedCoursesToRemove.length === 0)}
+          >
+            {isUpdatingCourses ? 'Updating...' : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Delete Syllabus</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this syllabus? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setIsDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            color="error"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Paper sx={{ p: 4 }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-            {selectedSyllabus.name}
+            {selectedSyllabus.name} ({selectedSyllabus.academicYear})
           </Typography>
           <Typography variant="h6" color="textSecondary">
             Study Program

@@ -11,16 +11,19 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Divider
+  Divider,
+  Grid
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateSyllabusRequest, CreateCourseRequest } from '../core/_models';
+import { AcademicYearSelect } from '../components/AcademicYearSelect';
 
 export const CreateSyllabus = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
   const [courses, setCourses] = useState<CreateCourseRequest[]>([]);
   const [newCourse, setNewCourse] = useState<CreateCourseRequest>({
     title: '',
@@ -34,26 +37,55 @@ export const CreateSyllabus = () => {
     courseTypeLabel: 'B',
     examMethod: 'P',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddCourse = () => {
-    if (newCourse.title && newCourse.code) {
-      setCourses([
-        ...courses,
-        { ...newCourse }
-      ]);
-      setNewCourse({
-        title: '',
-        code: '',
-        semester: 1,
-        credits: 0,
-        lectureHours: 0,
-        seminarHours: 0,
-        labHours: 0,
-        practiceHours: 0,
-        courseTypeLabel: 'B',
-        examMethod: 'P',
-      });
+    if (!newCourse.title || !newCourse.code) {
+      return;
     }
+
+    // Validate numeric fields
+    if (
+      isNaN(newCourse.semester) ||
+      isNaN(newCourse.credits) ||
+      isNaN(newCourse.lectureHours) ||
+      isNaN(newCourse.seminarHours) ||
+      isNaN(newCourse.labHours) ||
+      isNaN(newCourse.practiceHours)
+    ) {
+      return;
+    }
+
+    // Ensure all numeric fields are positive
+    if (
+      newCourse.semester < 1 ||
+      newCourse.credits < 0 ||
+      newCourse.lectureHours < 0 ||
+      newCourse.seminarHours < 0 ||
+      newCourse.labHours < 0 ||
+      newCourse.practiceHours < 0
+    ) {
+      return;
+    }
+
+    setCourses([
+      ...courses,
+      { ...newCourse }
+    ]);
+
+    // Reset form
+    setNewCourse({
+      title: '',
+      code: '',
+      semester: 1,
+      credits: 0,
+      lectureHours: 0,
+      seminarHours: 0,
+      labHours: 0,
+      practiceHours: 0,
+      courseTypeLabel: 'B',
+      examMethod: 'P',
+    });
   };
 
   const handleRemoveCourse = (index: number) => {
@@ -61,30 +93,40 @@ export const CreateSyllabus = () => {
     setCourses(updatedCourses);
   };
 
-  const handleSubmit = async () => {
-    if (!name || courses.length === 0) return;
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!name || !academicYear || courses.length === 0) return;
 
-    // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
-    const mappedCourses = courses.map((course) => {
-      const { practiceHours, courseTypeLabel, examMethod, ...rest } = course;
-      return {
-        ...rest,
-        detail: {
-          practiceHours,
-          courseTypeLabel,
-          examMethod
-        }
+    setIsSubmitting(true);
+
+    try {
+      // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
+      const mappedCourses = courses.map((course) => {
+        const { practiceHours, courseTypeLabel, examMethod, ...rest } = course;
+        return {
+          ...rest,
+          detail: {
+            practiceHours,
+            courseTypeLabel,
+            examMethod
+          }
+        };
+      });
+
+      const syllabusData: CreateSyllabusRequest = {
+        name,
+        academicYear,
+        courses: mappedCourses as any
       };
-    });
 
-    const syllabusData: CreateSyllabusRequest = {
-      name,
-      courses: mappedCourses as any
-    };
-
-    // TODO: Implement API call to create syllabus
-    console.log('Creating syllabus:', syllabusData);
-    navigate('/syllabus');
+      // TODO: Implement API call to create syllabus
+      console.log('Creating syllabus:', syllabusData);
+      navigate('/syllabus');
+    } catch (error) {
+      console.error('Error creating syllabus:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -102,13 +144,29 @@ export const CreateSyllabus = () => {
           Create New Syllabus
         </Typography>
 
-        <TextField
-          fullWidth
-          label="Syllabus Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          margin="normal"
-        />
+        <form onSubmit={handleSubmit}>
+          <Box sx={{ display: 'grid', gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Syllabus Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <AcademicYearSelect
+              value={academicYear}
+              onChange={setAcademicYear}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Syllabus'}
+            </Button>
+          </Box>
+        </form>
 
         <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
           Add Courses
@@ -235,17 +293,6 @@ export const CreateSyllabus = () => {
             </Box>
           ))}
         </List>
-
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={!name || courses.length === 0}
-          >
-            Create Syllabus
-          </Button>
-        </Box>
       </Paper>
     </Box>
   );
