@@ -120,9 +120,11 @@ export const MainLayout = () => {
                 <ListItemText primary="Courses" />
               </ListItem>
               <Divider />
-              <ListItem component={RouterLink} to="/ping" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="API Health Check" />
-              </ListItem>
+              {isAdmin() && (
+                <ListItem component={RouterLink} to="/ping" onClick={handleMobileMenuToggle}>
+                  <ListItemText primary="API Health Check" />
+                </ListItem>
+              )}
               <ListItem component={RouterLink} to="/profile" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Profile" />
               </ListItem>
@@ -137,9 +139,6 @@ export const MainLayout = () => {
               </ListItem>
               <ListItem component={RouterLink} to="/register" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Register" />
-              </ListItem>
-              <ListItem component={RouterLink} to="/ping" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="API Health Check" />
               </ListItem>
             </>
           )}
@@ -186,9 +185,11 @@ export const MainLayout = () => {
                   <Button color="inherit" component={RouterLink} to="/courses">
                     Courses
                   </Button>
-                  <Button color="inherit" component={RouterLink} to="/ping">
-                    API Health
-                  </Button>
+                  {isAdmin() && (
+                    <Button color="inherit" component={RouterLink} to="/ping">
+                      API Health
+                    </Button>
+                  )}
                 </>
               )}
               <Box sx={{ flexGrow: 1 }} />
@@ -245,9 +246,6 @@ export const MainLayout = () => {
                   </Button>
                   <Button color="inherit" component={RouterLink} to="/register">
                     Register
-                  </Button>
-                  <Button color="inherit" component={RouterLink} to="/ping">
-                    API Health
                   </Button>
                 </>
               )}

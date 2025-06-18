@@ -107,7 +107,13 @@ export const router = createBrowserRouter([
       },
       {
         path: 'ping',
-        element: <PingPage />,
+        element: (
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Administrator]}>
+              <PingPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'login',

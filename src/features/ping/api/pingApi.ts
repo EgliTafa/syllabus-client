@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { PingResponse, AuthenticatedPingResponse } from '../core/_models';
+import { PingResponse, AuthenticatedPingResponse, HealthCheckResponse } from '../core/_models';
 import { AuthInitializer } from '../../auth/core/AuthInitializer';
 import { isTokenExpired } from '../../../utils/jwtUtils';
 import config from '../../../config';
@@ -35,7 +35,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle 401 responses
+// Add response interceptor to handle 401 and 403 responses
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -43,6 +43,9 @@ api.interceptors.response.use(
       console.log('Received 401 response in ping API, logging out user');
       AuthInitializer.clearAuthState();
       window.location.href = '/login';
+    } else if (error.response?.status === 403) {
+      console.log('Received 403 response in ping API, access denied');
+      // Don't redirect for 403, let the component handle the error
     }
     return Promise.reject(error);
   }
@@ -56,6 +59,11 @@ export const pingApi = {
 
   authenticatedPing: async (): Promise<AuthenticatedPingResponse> => {
     const response = await api.get<AuthenticatedPingResponse>('/auth');
+    return response.data;
+  },
+
+  healthCheck: async (): Promise<HealthCheckResponse> => {
+    const response = await api.get<HealthCheckResponse>('/health');
     return response.data;
   },
 }; 
