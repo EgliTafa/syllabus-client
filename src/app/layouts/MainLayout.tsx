@@ -23,6 +23,7 @@ import { useState, useEffect } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+import { useTokenValidation } from "../../features/auth/hooks/useTokenValidation";
 import { ThemeToggle } from "../components";
 import { useGetAllSyllabuses } from "../../features/syllabus/hooks/useSyllabuses";
 import { useDispatch } from "react-redux";
@@ -33,6 +34,7 @@ export const MainLayout = () => {
   const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { handleLogout, isAdmin } = useAuth();
+  const { checkTokenValidity } = useTokenValidation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const theme = useTheme();
@@ -41,9 +43,12 @@ export const MainLayout = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchAndUpdateSyllabuses(dispatch);
+      // Check token validity before fetching data
+      if (checkTokenValidity()) {
+        fetchAndUpdateSyllabuses(dispatch);
+      }
     }
-  }, [isAuthenticated, fetchAndUpdateSyllabuses, dispatch]);
+  }, [isAuthenticated, fetchAndUpdateSyllabuses, dispatch, checkTokenValidity]);
 
   // Get unique academic years and sort them in ascending order
   const academicYears = Array.from(new Set(syllabusList.map((s) => s.academicYear)))
@@ -115,6 +120,9 @@ export const MainLayout = () => {
                 <ListItemText primary="Courses" />
               </ListItem>
               <Divider />
+              <ListItem component={RouterLink} to="/ping" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="API Health Check" />
+              </ListItem>
               <ListItem component={RouterLink} to="/profile" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Profile" />
               </ListItem>
@@ -129,6 +137,9 @@ export const MainLayout = () => {
               </ListItem>
               <ListItem component={RouterLink} to="/register" onClick={handleMobileMenuToggle}>
                 <ListItemText primary="Register" />
+              </ListItem>
+              <ListItem component={RouterLink} to="/ping" onClick={handleMobileMenuToggle}>
+                <ListItemText primary="API Health Check" />
               </ListItem>
             </>
           )}
@@ -175,6 +186,9 @@ export const MainLayout = () => {
                   <Button color="inherit" component={RouterLink} to="/courses">
                     Courses
                   </Button>
+                  <Button color="inherit" component={RouterLink} to="/ping">
+                    API Health
+                  </Button>
                 </>
               )}
               <Box sx={{ flexGrow: 1 }} />
@@ -205,7 +219,7 @@ export const MainLayout = () => {
                 id="menu-appbar"
                 anchorEl={anchorEl}
                 anchorOrigin={{
-                  vertical: "bottom",
+                  vertical: "top",
                   horizontal: "right",
                 }}
                 keepMounted
@@ -216,11 +230,7 @@ export const MainLayout = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem
-                  component={RouterLink}
-                  to="/profile"
-                  onClick={handleClose}
-                >
+                <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>
                   Profile
                 </MenuItem>
                 <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
@@ -235,6 +245,9 @@ export const MainLayout = () => {
                   </Button>
                   <Button color="inherit" component={RouterLink} to="/register">
                     Register
+                  </Button>
+                  <Button color="inherit" component={RouterLink} to="/ping">
+                    API Health
                   </Button>
                 </>
               )}
@@ -254,7 +267,6 @@ export const MainLayout = () => {
         </Toolbar>
       </AppBar>
       {renderMobileMenu()}
-
       <Container component="main" sx={{ flexGrow: 1, py: 3 }}>
         <Outlet />
       </Container>

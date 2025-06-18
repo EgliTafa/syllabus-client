@@ -14,24 +14,10 @@ import {
   ChangePasswordResponse,
 } from '../core/_models';
 import { AuthInitializer } from '../core/AuthInitializer';
+import { decodeToken, isTokenExpired } from '../../../utils/jwtUtils';
 import config from '../../../config';
 
 const API_URL = `${config.apiUrl}/auth`;
-
-// Function to decode JWT token
-const decodeToken = (token: string) => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-};
 
 // Create axios instance with default config
 const api = axios.create({
@@ -45,6 +31,14 @@ api.interceptors.request.use(
   (config) => {
     const token = AuthInitializer.getToken();
     if (token) {
+      // Check if token is expired before making the request
+      if (isTokenExpired(token)) {
+        console.log('Token is expired in auth API, redirecting to login');
+        AuthInitializer.clearAuthState();
+        window.location.href = '/login';
+        return Promise.reject(new Error('Token expired'));
+      }
+      
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -54,7 +48,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle token decoding
+// Add response interceptor to handle token decoding and 401 responses
 api.interceptors.response.use(
   (response) => {
     if (response.data.token) {
@@ -87,6 +81,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    if (error.response?.status === 401) {
+      console.log('Received 401 response in auth API, logging out user');
+      AuthInitializer.clearAuthState();
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
