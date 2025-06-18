@@ -220,14 +220,17 @@ export const SyllabusDetails = () => {
     );
   }
 
-  // Group courses by semester
-  const coursesBySemester = selectedSyllabus.courses.reduce((acc, course) => {
-    if (!acc[course.semester]) {
-      acc[course.semester] = [];
+  // Group courses by year and semester
+  const coursesByYearSemester = selectedSyllabus.courses.reduce((acc, course) => {
+    if (!acc[course.year]) {
+      acc[course.year] = {};
     }
-    acc[course.semester].push(course);
+    if (!acc[course.year][course.semester]) {
+      acc[course.year][course.semester] = [];
+    }
+    acc[course.year][course.semester].push(course);
     return acc;
-  }, {} as Record<number, Course[]>);
+  }, {} as Record<number, Record<number, Course[]>>);
 
   return (
     <Box p={3}>
@@ -459,64 +462,160 @@ export const SyllabusDetails = () => {
           </Typography>
         </Box>
 
-        {Object.entries(coursesBySemester).map(([semester, courses]) => (
-          <Box key={semester} sx={{ mb: 4 }}>
-            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', borderBottom: '2px solid #1976d2' }}>
-              Semester {semester}
+        {Object.entries(coursesByYearSemester).map(([year, semesters]) => (
+          <Box key={year} sx={{ mb: 4 }}>
+            <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold', color: '#1976d2' }}>
+              Year {year}
             </Typography>
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold' }}>No.</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Course</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Lecture</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Seminar</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Lab</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Total</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Practice</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Yearly Total</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Credits</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Evaluation Method</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {courses.map((course, index) => {
-                    const le = course.lectureHours || 0;
-                    const se = course.seminarHours || 0;
-                    const lab = course.labHours || 0;
-                    const praktik = course.practiceHours || 0;
-                    const totali = le + se + lab;
-                    const totaliVjetor = totali + praktik;
-                    return (
-                      <TableRow
-                        key={course.id}
-                        onClick={() => navigate(`/courses/${course.id}`)}
-                        sx={{
-                          cursor: 'pointer',
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                          }
-                        }}
-                      >
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{course.title}</TableCell>
-                        <TableCell>{course.courseTypeLabel || 'B'}</TableCell>
-                        <TableCell>{le}</TableCell>
-                        <TableCell>{se}</TableCell>
-                        <TableCell>{lab}</TableCell>
-                        <TableCell>{totali}</TableCell>
-                        <TableCell>{praktik}</TableCell>
-                        <TableCell>{totaliVjetor}</TableCell>
-                        <TableCell>{course.credits}</TableCell>
-                        <TableCell>{course.examMethod || 'P'}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            {Object.entries(semesters).map(([semester, courses]) => {
+              // Group electives by electiveGroup
+              const electivesI = courses.filter(c => c.electiveGroup === 'Elective I');
+              const electivesII = courses.filter(c => c.electiveGroup === 'Elective II');
+              const otherCourses = courses.filter(c => !c.electiveGroup);
+              return (
+                <Box key={semester} sx={{ mb: 4 }}>
+                  <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', borderBottom: '2px solid #1976d2' }}>
+                    Semester {semester}
+                  </Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 'bold' }}>No.</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Course</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Lecture</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Seminar</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Lab</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Practice</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Yearly Total</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Credits</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }}>Evaluation Method</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {/* Show non-elective courses first */}
+                        {otherCourses.map((course, index) => {
+                          const le = course.lectureHours || 0;
+                          const se = course.seminarHours || 0;
+                          const lab = course.labHours || 0;
+                          const praktik = course.practiceHours || 0;
+                          const totali = le + se + lab;
+                          const totaliVjetor = totali + praktik;
+                          return (
+                            <TableRow
+                              key={course.id}
+                              onClick={() => navigate(`/courses/${course.id}`)}
+                              sx={{
+                                cursor: 'pointer',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                }
+                              }}
+                            >
+                              <TableCell>{index + 1}</TableCell>
+                              <TableCell>{course.title}</TableCell>
+                              <TableCell>{course.courseTypeLabel || 'B'}</TableCell>
+                              <TableCell>{le}</TableCell>
+                              <TableCell>{se}</TableCell>
+                              <TableCell>{lab}</TableCell>
+                              <TableCell>{totali}</TableCell>
+                              <TableCell>{praktik}</TableCell>
+                              <TableCell>{totaliVjetor}</TableCell>
+                              <TableCell>{course.credits}</TableCell>
+                              <TableCell>{course.examMethod || 'P'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        {/* Show Elective I if present */}
+                        {electivesI.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={11} style={{ background: '#e3f2fd', fontWeight: 'bold' }}>
+                              Elective I
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {electivesI.map((course, index) => {
+                          const le = course.lectureHours || 0;
+                          const se = course.seminarHours || 0;
+                          const lab = course.labHours || 0;
+                          const praktik = course.practiceHours || 0;
+                          const totali = le + se + lab;
+                          const totaliVjetor = totali + praktik;
+                          return (
+                            <TableRow
+                              key={course.id}
+                              onClick={() => navigate(`/courses/${course.id}`)}
+                              sx={{
+                                cursor: 'pointer',
+                                backgroundColor: '#e3f2fd',
+                                '&:hover': {
+                                  backgroundColor: '#bbdefb'
+                                }
+                              }}
+                            >
+                              <TableCell>{otherCourses.length + index + 1}</TableCell>
+                              <TableCell>{course.title}</TableCell>
+                              <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
+                              <TableCell>{le}</TableCell>
+                              <TableCell>{se}</TableCell>
+                              <TableCell>{lab}</TableCell>
+                              <TableCell>{totali}</TableCell>
+                              <TableCell>{praktik}</TableCell>
+                              <TableCell>{totaliVjetor}</TableCell>
+                              <TableCell>{course.credits}</TableCell>
+                              <TableCell>{course.examMethod || 'P'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        {/* Show Elective II if present */}
+                        {electivesII.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={11} style={{ background: '#fff3e0', fontWeight: 'bold' }}>
+                              Elective II
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {electivesII.map((course, index) => {
+                          const le = course.lectureHours || 0;
+                          const se = course.seminarHours || 0;
+                          const lab = course.labHours || 0;
+                          const praktik = course.practiceHours || 0;
+                          const totali = le + se + lab;
+                          const totaliVjetor = totali + praktik;
+                          return (
+                            <TableRow
+                              key={course.id}
+                              onClick={() => navigate(`/courses/${course.id}`)}
+                              sx={{
+                                cursor: 'pointer',
+                                backgroundColor: '#fff3e0',
+                                '&:hover': {
+                                  backgroundColor: '#ffe0b2'
+                                }
+                              }}
+                            >
+                              <TableCell>{otherCourses.length + electivesI.length + index + 1}</TableCell>
+                              <TableCell>{course.title}</TableCell>
+                              <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
+                              <TableCell>{le}</TableCell>
+                              <TableCell>{se}</TableCell>
+                              <TableCell>{lab}</TableCell>
+                              <TableCell>{totali}</TableCell>
+                              <TableCell>{praktik}</TableCell>
+                              <TableCell>{totaliVjetor}</TableCell>
+                              <TableCell>{course.credits}</TableCell>
+                              <TableCell>{course.examMethod || 'P'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              );
+            })}
           </Box>
         ))}
 

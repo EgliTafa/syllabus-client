@@ -28,6 +28,7 @@ export const CreateSyllabus = () => {
   const [newCourse, setNewCourse] = useState<CreateCourseRequest>({
     title: '',
     code: '',
+    year: 1,
     semester: 1,
     credits: 0,
     lectureHours: 0,
@@ -36,8 +37,10 @@ export const CreateSyllabus = () => {
     practiceHours: 0,
     courseTypeLabel: 'B',
     examMethod: 'P',
+    electiveGroup: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleAddCourse = () => {
     if (!newCourse.title || !newCourse.code) {
@@ -77,6 +80,7 @@ export const CreateSyllabus = () => {
     setNewCourse({
       title: '',
       code: '',
+      year: 1,
       semester: 1,
       credits: 0,
       lectureHours: 0,
@@ -85,6 +89,7 @@ export const CreateSyllabus = () => {
       practiceHours: 0,
       courseTypeLabel: 'B',
       examMethod: 'P',
+      electiveGroup: null,
     });
   };
 
@@ -95,7 +100,29 @@ export const CreateSyllabus = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setValidationError(null);
     if (!name || !academicYear || courses.length === 0) return;
+
+    // Validation: Ensure only one Elective I and one Elective II per syllabus
+    const electiveICount = courses.filter(c => c.electiveGroup === 'Elective I').length;
+    const electiveIICount = courses.filter(c => c.electiveGroup === 'Elective II').length;
+    if (electiveICount > 1) {
+      setValidationError('Only one Elective I is allowed per syllabus.');
+      return;
+    }
+    if (electiveIICount > 1) {
+      setValidationError('Only one Elective II is allowed per syllabus.');
+      return;
+    }
+    // Optionally, require at least one of each if needed:
+    // if (electiveICount === 0) {
+    //   setValidationError('At least one Elective I is required per syllabus.');
+    //   return;
+    // }
+    // if (electiveIICount === 0) {
+    //   setValidationError('At least one Elective II is required per syllabus.');
+    //   return;
+    // }
 
     setIsSubmitting(true);
 
@@ -143,6 +170,9 @@ export const CreateSyllabus = () => {
         <Typography variant="h4" gutterBottom>
           Create New Syllabus
         </Typography>
+        {validationError && (
+          <Typography color="error" sx={{ mb: 2 }}>{validationError}</Typography>
+        )}
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'grid', gap: 3 }}>
@@ -187,6 +217,19 @@ export const CreateSyllabus = () => {
             margin="normal"
             fullWidth
           />
+          <TextField
+            label="Year"
+            select
+            value={newCourse.year}
+            onChange={(e) => setNewCourse({ ...newCourse, year: parseInt(e.target.value) })}
+            margin="normal"
+            fullWidth
+            SelectProps={{ native: true }}
+          >
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+          </TextField>
           <TextField
             label="Semester"
             type="number"
@@ -248,6 +291,22 @@ export const CreateSyllabus = () => {
             <option value="C">C</option>
             <option value="E">E</option>
           </TextField>
+          {/* Elective Group field, only show if elective type */}
+          {(newCourse.courseTypeLabel === 'C' || newCourse.courseTypeLabel === 'E') && (
+            <TextField
+              select
+              label="Elective Group"
+              value={newCourse.electiveGroup ?? ''}
+              onChange={(e) => setNewCourse({ ...newCourse, electiveGroup: e.target.value || null })}
+              margin="normal"
+              fullWidth
+              SelectProps={{ native: true }}
+            >
+              <option value="">None</option>
+              <option value="Elective I">Elective I</option>
+              <option value="Elective II">Elective II</option>
+            </TextField>
+          )}
           <TextField
             select
             label="Exam Method (Mënyra e Vlerësimit)"

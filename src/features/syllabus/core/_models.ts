@@ -8,6 +8,7 @@ export interface Course {
     id: number;
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
   lectureHours: number;
@@ -29,6 +30,7 @@ export interface Course {
   skillsAcquired?: string;
   courseResponsible?: string;
   topics?: Topic[];
+  electiveGroup?: string | null; // 'Elective I', 'Elective II', or null
 }
 
 export interface Syllabus {
@@ -47,6 +49,7 @@ export interface CreateSyllabusRequest {
 export interface CreateCourseRequest {
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
   lectureHours: number;
@@ -55,6 +58,7 @@ export interface CreateCourseRequest {
   practiceHours: number;
   courseTypeLabel?: string;
   examMethod?: string;
+  electiveGroup?: string | null; // 'Elective I', 'Elective II', or null
 }
   
 export interface UpdateSyllabusRequest {
