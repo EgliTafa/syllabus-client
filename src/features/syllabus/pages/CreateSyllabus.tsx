@@ -380,27 +380,95 @@ export const CreateSyllabus = () => {
           </Button>
         </Box>
 
+        <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+          Added Courses
+        </Typography>
         <List>
-          {courses.map((course, index) => (
-            <Box key={index}>
-              <ListItem>
-                <ListItemText
-                  primary={course.title}
-                  secondary={`Code: ${course.code} | Credits: ${course.credits} | Semester: ${course.semester}`}
-                />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => handleRemoveCourse(index)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-              {index < courses.length - 1 && <Divider />}
-            </Box>
-          ))}
+          {/* Group electives and mandatory courses */}
+          {(() => {
+            const electives = courses.filter(c => c.courseTypeLabel === 'C' || c.courseTypeLabel === 'E');
+            const electivesI = electives.filter(c => c.electiveGroup === 'Elective I');
+            const electivesII = electives.filter(c => c.electiveGroup === 'Elective II');
+            const otherElectives = electives.filter(c => !c.electiveGroup);
+            const mandatoryCourses = courses.filter(c => c.courseTypeLabel !== 'C' && c.courseTypeLabel !== 'E');
+            let idx = 1;
+            return (
+              <>
+                {/* Mandatory courses */}
+                {mandatoryCourses.map((course, i) => (
+                  <ListItem key={i} sx={{ background: '#f5f5f5', mb: 1, borderRadius: 1 }}>
+                    <ListItemText
+                      primary={`${idx++}. ${course.title}`}
+                      secondary={`Type: ${course.courseTypeLabel || 'B'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(i)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+                {/* Lëndë me zgjedhje group */}
+                {electives.length > 0 && (
+                  <ListItem sx={{ background: '#f3e5f5', fontWeight: 'bold', borderRadius: 1 }}>
+                    <ListItemText primary="Lëndë me zgjedhje" />
+                  </ListItem>
+                )}
+                {/* Elective I */}
+                {electivesI.length > 0 && (
+                  <ListItem sx={{ background: '#e3f2fd', fontWeight: 'bold', borderRadius: 1 }}>
+                    <ListItemText primary="Elective I" />
+                  </ListItem>
+                )}
+                {electivesI.map((course, i) => (
+                  <ListItem key={`ei-${i}`} sx={{ background: '#e3f2fd', mb: 1, borderRadius: 1 }}>
+                    <ListItemText
+                      primary={`${idx++}. ${course.title}`}
+                      secondary={`Type: ${course.courseTypeLabel || 'C'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(courses.indexOf(course))}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+                {/* Elective II */}
+                {electivesII.length > 0 && (
+                  <ListItem sx={{ background: '#fff3e0', fontWeight: 'bold', borderRadius: 1 }}>
+                    <ListItemText primary="Elective II" />
+                  </ListItem>
+                )}
+                {electivesII.map((course, i) => (
+                  <ListItem key={`eii-${i}`} sx={{ background: '#fff3e0', mb: 1, borderRadius: 1 }}>
+                    <ListItemText
+                      primary={`${idx++}. ${course.title}`}
+                      secondary={`Type: ${course.courseTypeLabel || 'C'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(courses.indexOf(course))}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+                {/* Other electives */}
+                {otherElectives.map((course, i) => (
+                  <ListItem key={`eo-${i}`} sx={{ background: '#f3e5f5', mb: 1, borderRadius: 1 }}>
+                    <ListItemText
+                      primary={`${idx++}. ${course.title}`}
+                      secondary={`Type: ${course.courseTypeLabel || 'C'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(courses.indexOf(course))}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </>
+            );
+          })()}
         </List>
       </Paper>
     </Box>

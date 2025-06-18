@@ -513,10 +513,12 @@ export const SyllabusDetails = () => {
               Year {year}
             </Typography>
             {Object.entries(semesters).map(([semester, courses]) => {
-              // Group electives by electiveGroup
-              const electivesI = courses.filter(c => c.electiveGroup === 'Elective I');
-              const electivesII = courses.filter(c => c.electiveGroup === 'Elective II');
-              const otherCourses = courses.filter(c => !c.electiveGroup);
+              // Group electives by electiveGroup and type
+              const electives = courses.filter(c => (c.courseTypeLabel === 'C' || c.courseTypeLabel === 'E'));
+              const electivesI = electives.filter(c => c.electiveGroup === 'Elective I');
+              const electivesII = electives.filter(c => c.electiveGroup === 'Elective II');
+              const otherElectives = electives.filter(c => !c.electiveGroup);
+              const mandatoryCourses = courses.filter(c => c.courseTypeLabel !== 'C' && c.courseTypeLabel !== 'E');
               return (
                 <Box key={semester} sx={{ mb: 4 }}>
                   <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', borderBottom: '2px solid #1976d2' }}>
@@ -540,8 +542,8 @@ export const SyllabusDetails = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {/* Show non-elective courses first */}
-                        {otherCourses.map((course, index) => {
+                        {/* Show mandatory courses first */}
+                        {mandatoryCourses.map((course, index) => {
                           const le = course.lectureHours || 0;
                           const se = course.seminarHours || 0;
                           const lab = course.labHours || 0;
@@ -573,6 +575,14 @@ export const SyllabusDetails = () => {
                             </TableRow>
                           );
                         })}
+                        {/* Lëndë me zgjedhje group */}
+                        {electives.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={11} style={{ background: '#f3e5f5', fontWeight: 'bold' }}>
+                              Lëndë me zgjedhje
+                            </TableCell>
+                          </TableRow>
+                        )}
                         {/* Show Elective I if present */}
                         {electivesI.length > 0 && (
                           <TableRow>
@@ -600,7 +610,7 @@ export const SyllabusDetails = () => {
                                 }
                               }}
                             >
-                              <TableCell>{otherCourses.length + index + 1}</TableCell>
+                              <TableCell>{mandatoryCourses.length + index + 1}</TableCell>
                               <TableCell>{course.title}</TableCell>
                               <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
                               <TableCell>{le}</TableCell>
@@ -641,7 +651,41 @@ export const SyllabusDetails = () => {
                                 }
                               }}
                             >
-                              <TableCell>{otherCourses.length + electivesI.length + index + 1}</TableCell>
+                              <TableCell>{mandatoryCourses.length + electivesI.length + index + 1}</TableCell>
+                              <TableCell>{course.title}</TableCell>
+                              <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
+                              <TableCell>{le}</TableCell>
+                              <TableCell>{se}</TableCell>
+                              <TableCell>{lab}</TableCell>
+                              <TableCell>{totali}</TableCell>
+                              <TableCell>{praktik}</TableCell>
+                              <TableCell>{totaliVjetor}</TableCell>
+                              <TableCell>{course.credits}</TableCell>
+                              <TableCell>{course.examMethod || 'P'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        {/* Show other electives if present */}
+                        {otherElectives.map((course, index) => {
+                          const le = course.lectureHours || 0;
+                          const se = course.seminarHours || 0;
+                          const lab = course.labHours || 0;
+                          const praktik = course.practiceHours || 0;
+                          const totali = le + se + lab;
+                          const totaliVjetor = totali + praktik;
+                          return (
+                            <TableRow
+                              key={course.id}
+                              onClick={() => navigate(`/courses/${course.id}`)}
+                              sx={{
+                                cursor: 'pointer',
+                                backgroundColor: '#f3e5f5',
+                                '&:hover': {
+                                  backgroundColor: '#ce93d8'
+                                }
+                              }}
+                            >
+                              <TableCell>{mandatoryCourses.length + electivesI.length + electivesII.length + index + 1}</TableCell>
                               <TableCell>{course.title}</TableCell>
                               <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
                               <TableCell>{le}</TableCell>
