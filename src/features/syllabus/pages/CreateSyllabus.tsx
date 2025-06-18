@@ -98,6 +98,31 @@ export const CreateSyllabus = () => {
     setCourses(updatedCourses);
   };
 
+  // Utility: Calculate totals
+  const getTotals = (courses: CreateCourseRequest[]) => {
+    const totals: Record<number, { [semester: number]: { credits: number; lecture: number; seminar: number; lab: number; practice: number; total: number } }> = {};
+    let overall = { credits: 0, lecture: 0, seminar: 0, lab: 0, practice: 0, total: 0 };
+    for (const c of courses) {
+      if (!totals[c.year]) totals[c.year] = {};
+      if (!totals[c.year][c.semester]) totals[c.year][c.semester] = { credits: 0, lecture: 0, seminar: 0, lab: 0, practice: 0, total: 0 };
+      totals[c.year][c.semester].credits += c.credits;
+      totals[c.year][c.semester].lecture += c.lectureHours;
+      totals[c.year][c.semester].seminar += c.seminarHours;
+      totals[c.year][c.semester].lab += c.labHours;
+      totals[c.year][c.semester].practice += c.practiceHours || 0;
+      totals[c.year][c.semester].total += c.lectureHours + c.seminarHours + c.labHours + (c.practiceHours || 0);
+      overall.credits += c.credits;
+      overall.lecture += c.lectureHours;
+      overall.seminar += c.seminarHours;
+      overall.lab += c.labHours;
+      overall.practice += c.practiceHours || 0;
+      overall.total += c.lectureHours + c.seminarHours + c.labHours + (c.practiceHours || 0);
+    }
+    return { totals, overall };
+  };
+
+  const { totals, overall } = getTotals(courses);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setValidationError(null);
@@ -114,15 +139,20 @@ export const CreateSyllabus = () => {
       setValidationError('Only one Elective II is allowed per syllabus.');
       return;
     }
-    // Optionally, require at least one of each if needed:
-    // if (electiveICount === 0) {
-    //   setValidationError('At least one Elective I is required per syllabus.');
-    //   return;
-    // }
-    // if (electiveIICount === 0) {
-    //   setValidationError('At least one Elective II is required per syllabus.');
-    //   return;
-    // }
+    // Validation: 60 credits per year
+    for (const year of [1, 2, 3]) {
+      const yearCredits = Object.values(totals[year] || {}).reduce((sum, s) => sum + s.credits, 0);
+      if (yearCredits !== 60) {
+        setValidationError(`Year ${year} must have exactly 60 credits (currently ${yearCredits}).`);
+        return;
+      }
+    }
+    // Optionally, validate total credits
+    if (overall.credits !== 180) {
+      setValidationError(`Total credits must be 180 (currently ${overall.credits}).`);
+      return;
+    }
+    // Optionally, validate hours per semester/year/overall as needed
 
     setIsSubmitting(true);
 
@@ -173,6 +203,26 @@ export const CreateSyllabus = () => {
         {validationError && (
           <Typography color="error" sx={{ mb: 2 }}>{validationError}</Typography>
         )}
+        {/* Totals display */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Totals</Typography>
+          {Object.entries(totals).map(([year, semesters]) => (
+            <Box key={year} sx={{ mb: 1, pl: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Year {year}:</Typography>
+              {Object.entries(semesters).map(([semester, t]) => (
+                <Typography key={semester} variant="body2" sx={{ ml: 2 }}>
+                  Semester {semester}: {t.credits} credits, {t.lecture} lecture, {t.seminar} seminar, {t.lab} lab, {t.practice} practice, {t.total} total hours
+                </Typography>
+              ))}
+              <Typography variant="body2" sx={{ ml: 2, fontWeight: 'bold' }}>
+                Year {year} total: {Object.values(semesters).reduce((sum, s) => sum + s.credits, 0)} credits
+              </Typography>
+            </Box>
+          ))}
+          <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1 }}>
+            Overall: {overall.credits} credits, {overall.lecture} lecture, {overall.seminar} seminar, {overall.lab} lab, {overall.practice} practice, {overall.total} total hours
+          </Typography>
+        </Box>
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'grid', gap: 3 }}>

@@ -204,6 +204,29 @@ export const SyllabusDetails = () => {
     }
   };
 
+  // Utility: Calculate totals for details view
+  const getTotals = (courses: Course[]) => {
+    const totals: Record<number, { [semester: number]: { credits: number; lecture: number; seminar: number; lab: number; practice: number; total: number } }> = {};
+    let overall = { credits: 0, lecture: 0, seminar: 0, lab: 0, practice: 0, total: 0 };
+    for (const c of courses) {
+      if (!totals[c.year]) totals[c.year] = {};
+      if (!totals[c.year][c.semester]) totals[c.year][c.semester] = { credits: 0, lecture: 0, seminar: 0, lab: 0, practice: 0, total: 0 };
+      totals[c.year][c.semester].credits += c.credits;
+      totals[c.year][c.semester].lecture += c.lectureHours;
+      totals[c.year][c.semester].seminar += c.seminarHours;
+      totals[c.year][c.semester].lab += c.labHours;
+      totals[c.year][c.semester].practice += c.practiceHours || 0;
+      totals[c.year][c.semester].total += c.lectureHours + c.seminarHours + c.labHours + (c.practiceHours || 0);
+      overall.credits += c.credits;
+      overall.lecture += c.lectureHours;
+      overall.seminar += c.seminarHours;
+      overall.lab += c.labHours;
+      overall.practice += c.practiceHours || 0;
+      overall.total += c.lectureHours + c.seminarHours + c.labHours + (c.practiceHours || 0);
+    }
+    return { totals, overall };
+  };
+
   if (isFetching) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
@@ -219,6 +242,8 @@ export const SyllabusDetails = () => {
       </Box>
     );
   }
+
+  const { totals, overall } = getTotals(selectedSyllabus.courses);
 
   // Group courses by year and semester
   const coursesByYearSemester = selectedSyllabus.courses.reduce((acc, course) => {
@@ -459,6 +484,26 @@ export const SyllabusDetails = () => {
           </Typography>
           <Typography variant="h6" color="textSecondary">
             Study Program
+          </Typography>
+        </Box>
+        {/* Totals display */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Totals</Typography>
+          {Object.entries(totals).map(([year, semesters]) => (
+            <Box key={year} sx={{ mb: 1, pl: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Year {year}:</Typography>
+              {Object.entries(semesters).map(([semester, t]) => (
+                <Typography key={semester} variant="body2" sx={{ ml: 2 }}>
+                  Semester {semester}: {t.credits} credits, {t.lecture} lecture, {t.seminar} seminar, {t.lab} lab, {t.practice} practice, {t.total} total hours
+                </Typography>
+              ))}
+              <Typography variant="body2" sx={{ ml: 2, fontWeight: 'bold' }}>
+                Year {year} total: {Object.values(semesters).reduce((sum, s) => sum + s.credits, 0)} credits
+              </Typography>
+            </Box>
+          ))}
+          <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1 }}>
+            Overall: {overall.credits} credits, {overall.lecture} lecture, {overall.seminar} seminar, {overall.lab} lab, {overall.practice} practice, {overall.total} total hours
           </Typography>
         </Box>
 

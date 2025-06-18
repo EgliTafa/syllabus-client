@@ -45,7 +45,7 @@ export const MainLayout = () => {
     if (isAuthenticated) {
       // Check token validity before fetching data
       if (checkTokenValidity()) {
-        fetchAndUpdateSyllabuses(dispatch);
+      fetchAndUpdateSyllabuses(dispatch);
       }
     }
   }, [isAuthenticated, fetchAndUpdateSyllabuses, dispatch, checkTokenValidity]);
