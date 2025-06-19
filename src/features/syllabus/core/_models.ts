@@ -1,8 +1,4 @@
-export interface Topic {
-  title: string;
-  hours: number;
-  reference?: string;
-}
+import { TeachingPlan, EvaluationBreakdown, Topic } from '../../courses/core/_models';
 
 export interface Course {
     id: number;
@@ -22,8 +18,8 @@ export interface Course {
   language?: string;
   ethicsCode?: string;
   teachingFormat?: string;
-  teachingPlan?: any; // TODO: Define proper type
-  evaluationBreakdown?: any; // TODO: Define proper type
+  teachingPlan?: TeachingPlan;
+  evaluationBreakdown?: EvaluationBreakdown;
   objective?: string;
   keyConcepts?: string;
   prerequisites?: string;

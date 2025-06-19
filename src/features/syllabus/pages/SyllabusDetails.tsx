@@ -37,6 +37,7 @@ import { Course } from '../core/_models';
 import { updateSyllabus, exportSyllabusPdf, addOrRemoveCoursesFromSyllabus, deleteSyllabus } from '../core/_requests';
 import { AcademicYearSelect } from '../components/AcademicYearSelect';
 import { CourseSelectionDialog } from '../components/CourseSelectionDialog';
+import { fetchAllCourses } from '../../courses/core/_requests';
 
 interface SelectedCourse {
   courseId: number;
@@ -67,11 +68,23 @@ export const SyllabusDetails = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Local state for visual course management
+  const [localCoursesToRemove, setLocalCoursesToRemove] = useState<number[]>([]);
+  const [localCoursesToAdd, setLocalCoursesToAdd] = useState<SelectedCourse[]>([]);
+
   useEffect(() => {
     if (syllabusId) {
       fetchAndUpdateSyllabusById(parseInt(syllabusId), dispatch);
     }
   }, [syllabusId, dispatch]);
+
+  // Reset local state when dialog opens/closes
+  useEffect(() => {
+    if (isAddCourseDialogOpen) {
+      setLocalCoursesToRemove([]);
+      setLocalCoursesToAdd([]);
+    }
+  }, [isAddCourseDialogOpen]);
 
   const handleEditClick = () => {
     setNewName(selectedSyllabus?.name || '');
@@ -143,7 +156,11 @@ export const SyllabusDetails = () => {
   };
 
   const handleRemoveCourse = (courseId: number) => {
-    setSelectedCoursesToRemove([...selectedCoursesToRemove, courseId]);
+    setLocalCoursesToRemove(prev => [...prev, courseId]);
+  };
+
+  const handleUndoRemoveCourse = (courseId: number) => {
+    setLocalCoursesToRemove(prev => prev.filter(id => id !== courseId));
   };
 
   const handleAddCourses = async () => {
@@ -151,21 +168,21 @@ export const SyllabusDetails = () => {
     
     setIsUpdatingCourses(true);
     try {
-      // Extract course IDs from selectedCoursesToAdd
-      const courseIdsToAdd = selectedCoursesToAdd.map(sc => sc.courseId);
+      // Extract course IDs from localCoursesToAdd
+      const courseIdsToAdd = localCoursesToAdd.map(sc => sc.courseId);
       
       await addOrRemoveCoursesFromSyllabus({
         syllabusId: selectedSyllabus.id,
         courseIdsToAdd: courseIdsToAdd,
-        courseIdsToRemove: selectedCoursesToRemove
+        courseIdsToRemove: localCoursesToRemove
       });
       
       // Refresh syllabus data
       fetchAndUpdateSyllabusById(selectedSyllabus.id, dispatch);
       
       // Reset state
-      setSelectedCoursesToAdd([]);
-      setSelectedCoursesToRemove([]);
+      setLocalCoursesToAdd([]);
+      setLocalCoursesToRemove([]);
       setIsAddCourseDialogOpen(false);
     } catch (err: any) {
       setError(err.message || 'Failed to update courses');
@@ -174,15 +191,51 @@ export const SyllabusDetails = () => {
     }
   };
 
+  const handleCloseCourseDialog = () => {
+    setIsAddCourseDialogOpen(false);
+    setLocalCoursesToAdd([]);
+    setLocalCoursesToRemove([]);
+  };
+
   const fetchAvailableCourses = async () => {
     setIsLoadingCourses(true);
     try {
-      // TODO: Replace with actual API call to get available courses
-      const response = await fetch('/api/Course');
-      const data = await response.json();
-      setAvailableCourses(data);
+      const coursesResponse = await fetchAllCourses();
+      
+      // Convert courses from courses module format to syllabus module format
+      const convertedCourses: Course[] = coursesResponse.map(course => ({
+        id: course.id,
+        title: course.title,
+        code: course.code,
+        year: course.year || 1, // Use actual year from API or default to 1
+        semester: course.semester,
+        credits: course.credits,
+        lectureHours: course.lectureHours || 0,
+        seminarHours: course.seminarHours || 0,
+        labHours: course.labHours || 0,
+        practiceHours: course.practiceHours || 0,
+        courseTypeLabel: course.courseTypeLabel || '',
+        examMethod: course.examMethod || '',
+        academicProgram: course.academicProgram || '',
+        academicYear: course.academicYear || '',
+        language: course.language || '',
+        ethicsCode: course.ethicsCode || '',
+        teachingFormat: course.teachingFormat || '',
+        teachingPlan: course.teachingPlan,
+        evaluationBreakdown: course.evaluationBreakdown,
+        objective: course.objective || '',
+        keyConcepts: course.keyConcepts || '',
+        prerequisites: course.prerequisites || '',
+        skillsAcquired: course.skillsAcquired || '',
+        courseResponsible: course.courseResponsible || '',
+        topics: course.topics || [],
+        electiveGroup: course.electiveGroup || null,
+      }));
+      
+      setAvailableCourses(convertedCourses);
     } catch (err) {
       console.error('Error fetching available courses:', err);
+      setError('Failed to load available courses. Please try again.');
     } finally {
       setIsLoadingCourses(false);
     }
@@ -211,6 +264,12 @@ export const SyllabusDetails = () => {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
     }
+  };
+
+  // Get courses to display (excluding those marked for removal)
+  const getDisplayCourses = () => {
+    if (!selectedSyllabus) return [];
+    return selectedSyllabus.courses.filter(course => !localCoursesToRemove.includes(course.id));
   };
 
   // Utility: Calculate totals for details view
@@ -252,10 +311,10 @@ export const SyllabusDetails = () => {
     );
   }
 
-  const { totals, overall } = getTotals(selectedSyllabus.courses);
+  const { totals, overall } = getTotals(getDisplayCourses());
 
   // Group courses by year and semester
-  const coursesByYearSemester = selectedSyllabus.courses.reduce((acc, course) => {
+  const coursesByYearSemester = getDisplayCourses().reduce((acc, course) => {
     if (!acc[course.year]) {
       acc[course.year] = {};
     }
@@ -325,7 +384,7 @@ export const SyllabusDetails = () => {
               px: 2
             }}
           >
-            Add Courses
+            Add or Remove Courses
           </Button>
           <Button
             variant="contained"
@@ -374,7 +433,7 @@ export const SyllabusDetails = () => {
 
       <Dialog 
         open={isAddCourseDialogOpen} 
-        onClose={() => setIsAddCourseDialogOpen(false)}
+        onClose={handleCloseCourseDialog}
         maxWidth="md"
         fullWidth
       >
@@ -393,36 +452,61 @@ export const SyllabusDetails = () => {
                 availableCourses={availableCourses.filter(
                   course => !selectedSyllabus?.courses.some(c => c.id === course.id)
                 )}
-                selectedCourses={selectedCoursesToAdd}
-                onSelectionChange={setSelectedCoursesToAdd}
+                selectedCourses={localCoursesToAdd}
+                onSelectionChange={setLocalCoursesToAdd}
               />
             )}
 
             <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
               Current Courses
             </Typography>
+            
+            {/* Summary of changes */}
+            {(localCoursesToAdd.length > 0 || localCoursesToRemove.length > 0) && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  Summary of Changes:
+                </Typography>
+                {localCoursesToAdd.length > 0 && (
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    📥 <strong>{localCoursesToAdd.length}</strong> course(s) to add
+                  </Typography>
+                )}
+                {localCoursesToRemove.length > 0 && (
+                  <Typography variant="body2">
+                    📤 <strong>{localCoursesToRemove.length}</strong> course(s) to remove
+                  </Typography>
+                )}
+              </Box>
+            )}
+            
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Course</TableCell>
                     <TableCell>Code</TableCell>
+                    <TableCell>Year</TableCell>
                     <TableCell>Semester</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {selectedSyllabus?.courses.map((course) => (
+                  {getDisplayCourses().map((course) => (
                     <TableRow key={course.id}>
                       <TableCell>{course.title}</TableCell>
                       <TableCell>{course.code}</TableCell>
+                      <TableCell>Year {course.year}</TableCell>
                       <TableCell>{course.semester}</TableCell>
                       <TableCell>
                         <Tooltip title="Remove Course">
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => handleRemoveCourse(course.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveCourse(course.id);
+                            }}
                             disabled={isUpdatingCourses}
                           >
                             <DeleteIcon />
@@ -431,6 +515,57 @@ export const SyllabusDetails = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {localCoursesToRemove.length > 0 && (
+                    <>
+                      <TableRow>
+                        <TableCell colSpan={5} sx={{ background: '#fff3e0', fontWeight: 'bold' }}>
+                          Courses Marked for Removal
+                        </TableCell>
+                      </TableRow>
+                      {selectedSyllabus?.courses
+                        .filter(course => localCoursesToRemove.includes(course.id))
+                        .map((course) => (
+                          <TableRow key={course.id} sx={{ background: '#fff3e0' }}>
+                            <TableCell sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
+                              {course.title}
+                            </TableCell>
+                            <TableCell sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
+                              {course.code}
+                            </TableCell>
+                            <TableCell sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
+                              Year {course.year}
+                            </TableCell>
+                            <TableCell sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
+                              {course.semester}
+                            </TableCell>
+                            <TableCell>
+                              <Tooltip title="Undo Remove">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUndoRemoveCourse(course.id);
+                                  }}
+                                  disabled={isUpdatingCourses}
+                                >
+                                  <AddIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </>
+                  )}
+                  {getDisplayCourses().length === 0 && localCoursesToRemove.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        <Typography color="textSecondary">
+                          No courses in this syllabus
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -438,11 +573,7 @@ export const SyllabusDetails = () => {
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => {
-              setIsAddCourseDialogOpen(false);
-              setSelectedCoursesToAdd([]);
-              setSelectedCoursesToRemove([]);
-            }}
+            onClick={handleCloseCourseDialog}
             disabled={isUpdatingCourses}
           >
             Cancel
@@ -451,7 +582,7 @@ export const SyllabusDetails = () => {
             onClick={handleAddCourses}
             variant="contained"
             color="primary"
-            disabled={isUpdatingCourses || (selectedCoursesToAdd.length === 0 && selectedCoursesToRemove.length === 0)}
+            disabled={isUpdatingCourses || (localCoursesToAdd.length === 0 && localCoursesToRemove.length === 0)}
           >
             {isUpdatingCourses ? 'Updating...' : 'Save Changes'}
           </Button>
@@ -494,6 +625,13 @@ export const SyllabusDetails = () => {
           <Typography variant="h6" color="textSecondary">
             Study Program
           </Typography>
+          {isAddCourseDialogOpen && (
+            <Alert severity="info" sx={{ mt: 2, maxWidth: 600, mx: 'auto' }}>
+              <Typography variant="body2">
+                Course management dialog is open. Changes will be applied when you click "Save Changes".
+              </Typography>
+            </Alert>
+          )}
         </Box>
         {/* Totals display */}
         <Box sx={{ mb: 2 }}>
@@ -559,19 +697,24 @@ export const SyllabusDetails = () => {
                           const praktik = course.practiceHours || 0;
                           const totali = le + se + lab;
                           const totaliVjetor = totali + praktik;
+                          const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                           return (
                             <TableRow
                               key={course.id}
                               onClick={() => navigate(`/courses/${course.id}`)}
                               sx={{
                                 cursor: 'pointer',
+                                backgroundColor: isMarkedForRemoval ? '#ffebee' : 'inherit',
+                                opacity: isMarkedForRemoval ? 0.6 : 1,
                                 '&:hover': {
-                                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                  backgroundColor: isMarkedForRemoval ? '#ffcdd2' : 'rgba(0, 0, 0, 0.04)'
                                 }
                               }}
                             >
                               <TableCell>{index + 1}</TableCell>
-                              <TableCell>{course.title}</TableCell>
+                              <TableCell sx={{ textDecoration: isMarkedForRemoval ? 'line-through' : 'none' }}>
+                                {course.title}
+                              </TableCell>
                               <TableCell>{course.courseTypeLabel || 'B'}</TableCell>
                               <TableCell>{le}</TableCell>
                               <TableCell>{se}</TableCell>
@@ -607,20 +750,24 @@ export const SyllabusDetails = () => {
                           const praktik = course.practiceHours || 0;
                           const totali = le + se + lab;
                           const totaliVjetor = totali + praktik;
+                          const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                           return (
                             <TableRow
                               key={course.id}
                               onClick={() => navigate(`/courses/${course.id}`)}
                               sx={{
                                 cursor: 'pointer',
-                                backgroundColor: '#e3f2fd',
+                                backgroundColor: isMarkedForRemoval ? '#ffebee' : 'inherit',
+                                opacity: isMarkedForRemoval ? 0.6 : 1,
                                 '&:hover': {
-                                  backgroundColor: '#bbdefb'
+                                  backgroundColor: isMarkedForRemoval ? '#ffcdd2' : 'rgba(0, 0, 0, 0.04)'
                                 }
                               }}
                             >
                               <TableCell>{mandatoryCourses.length + index + 1}</TableCell>
-                              <TableCell>{course.title}</TableCell>
+                              <TableCell sx={{ textDecoration: isMarkedForRemoval ? 'line-through' : 'none' }}>
+                                {course.title}
+                              </TableCell>
                               <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
                               <TableCell>{le}</TableCell>
                               <TableCell>{se}</TableCell>
@@ -648,20 +795,24 @@ export const SyllabusDetails = () => {
                           const praktik = course.practiceHours || 0;
                           const totali = le + se + lab;
                           const totaliVjetor = totali + praktik;
+                          const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                           return (
                             <TableRow
                               key={course.id}
                               onClick={() => navigate(`/courses/${course.id}`)}
                               sx={{
                                 cursor: 'pointer',
-                                backgroundColor: '#fff3e0',
+                                backgroundColor: isMarkedForRemoval ? '#ffebee' : 'inherit',
+                                opacity: isMarkedForRemoval ? 0.6 : 1,
                                 '&:hover': {
-                                  backgroundColor: '#ffe0b2'
+                                  backgroundColor: isMarkedForRemoval ? '#ffcdd2' : 'rgba(0, 0, 0, 0.04)'
                                 }
                               }}
                             >
                               <TableCell>{mandatoryCourses.length + electivesI.length + index + 1}</TableCell>
-                              <TableCell>{course.title}</TableCell>
+                              <TableCell sx={{ textDecoration: isMarkedForRemoval ? 'line-through' : 'none' }}>
+                                {course.title}
+                              </TableCell>
                               <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
                               <TableCell>{le}</TableCell>
                               <TableCell>{se}</TableCell>
@@ -682,20 +833,24 @@ export const SyllabusDetails = () => {
                           const praktik = course.practiceHours || 0;
                           const totali = le + se + lab;
                           const totaliVjetor = totali + praktik;
+                          const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                           return (
                             <TableRow
                               key={course.id}
                               onClick={() => navigate(`/courses/${course.id}`)}
                               sx={{
                                 cursor: 'pointer',
-                                backgroundColor: '#f3e5f5',
+                                backgroundColor: isMarkedForRemoval ? '#ffebee' : 'inherit',
+                                opacity: isMarkedForRemoval ? 0.6 : 1,
                                 '&:hover': {
-                                  backgroundColor: '#ce93d8'
+                                  backgroundColor: isMarkedForRemoval ? '#ffcdd2' : 'rgba(0, 0, 0, 0.04)'
                                 }
                               }}
                             >
                               <TableCell>{mandatoryCourses.length + electivesI.length + electivesII.length + index + 1}</TableCell>
-                              <TableCell>{course.title}</TableCell>
+                              <TableCell sx={{ textDecoration: isMarkedForRemoval ? 'line-through' : 'none' }}>
+                                {course.title}
+                              </TableCell>
                               <TableCell>{course.courseTypeLabel || 'C'}</TableCell>
                               <TableCell>{le}</TableCell>
                               <TableCell>{se}</TableCell>

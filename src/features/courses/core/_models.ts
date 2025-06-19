@@ -45,10 +45,16 @@ export interface Course {
   id: number;
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
+  lectureHours: number;
+  seminarHours: number;
+  labHours: number;
+  practiceHours: number;
   evaluation?: EvaluationMethod;
   type?: CourseType;
+  electiveGroup?: string | null;
   // Flat API fields (optional)
   courseTypeLabel?: string;
   examMethod?: string;
@@ -71,15 +77,17 @@ export interface Course {
 
 export enum EvaluationMethod {
   Exam = 'Exam',
-  Project = 'Project',
-  Assignment = 'Assignment',
-  Combined = 'Combined'
+  ContinuousAssessment = 'ContinuousAssessment',
+  Pass = 'Pass',
+  DiplomaExam = 'DiplomaExam'
 }
 
 export enum CourseType {
   Mandatory = 'Mandatory',
+  Advanced = 'Advanced',
+  Specialized = 'Specialized',
   Elective = 'Elective',
-  Optional = 'Optional'
+  FinalProject = 'FinalProject'
 }
 
 export interface CreateCourseRequest {
@@ -89,10 +97,13 @@ export interface CreateCourseRequest {
   lectureHours: number;
   seminarHours: number;
   labHours: number;
+  practiceHours: number;
   credits: number;
   evaluation: EvaluationMethod;
   type: CourseType;
   syllabusId: number;
+  year: number;
+  electiveGroup?: string;
   detail?: CourseDetail;
 }
 
