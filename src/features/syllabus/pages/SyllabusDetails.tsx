@@ -26,6 +26,7 @@ import {
   DialogActions,
   IconButton,
   Tooltip,
+  Chip
 } from '@mui/material';
 import { useGetSyllabusById } from '../hooks/useSyllabuses';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -36,6 +37,11 @@ import { Course } from '../core/_models';
 import { updateSyllabus, exportSyllabusPdf, addOrRemoveCoursesFromSyllabus, deleteSyllabus } from '../core/_requests';
 import { AcademicYearSelect } from '../components/AcademicYearSelect';
 import { CourseSelectionDialog } from '../components/CourseSelectionDialog';
+
+interface SelectedCourse {
+  courseId: number;
+  year: number;
+}
 
 export const SyllabusDetails = () => {
   const { syllabusId } = useParams<{ syllabusId: string }>();
@@ -53,7 +59,7 @@ export const SyllabusDetails = () => {
   const [exportError, setExportError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddCourseDialogOpen, setIsAddCourseDialogOpen] = useState(false);
-  const [selectedCoursesToAdd, setSelectedCoursesToAdd] = useState<number[]>([]);
+  const [selectedCoursesToAdd, setSelectedCoursesToAdd] = useState<SelectedCourse[]>([]);
   const [selectedCoursesToRemove, setSelectedCoursesToRemove] = useState<number[]>([]);
   const [isUpdatingCourses, setIsUpdatingCourses] = useState(false);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
@@ -145,9 +151,12 @@ export const SyllabusDetails = () => {
     
     setIsUpdatingCourses(true);
     try {
+      // Extract course IDs from selectedCoursesToAdd
+      const courseIdsToAdd = selectedCoursesToAdd.map(sc => sc.courseId);
+      
       await addOrRemoveCoursesFromSyllabus({
         syllabusId: selectedSyllabus.id,
-        courseIdsToAdd: selectedCoursesToAdd,
+        courseIdsToAdd: courseIdsToAdd,
         courseIdsToRemove: selectedCoursesToRemove
       });
       
@@ -384,7 +393,7 @@ export const SyllabusDetails = () => {
                 availableCourses={availableCourses.filter(
                   course => !selectedSyllabus?.courses.some(c => c.id === course.id)
                 )}
-                selectedCourseIds={selectedCoursesToAdd}
+                selectedCourses={selectedCoursesToAdd}
                 onSelectionChange={setSelectedCoursesToAdd}
               />
             )}

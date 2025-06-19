@@ -12,116 +12,27 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Divider,
-  Grid
+  Grid,
+  Alert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { CreateSyllabusRequest, CreateCourseRequest } from '../core/_models';
+import { CreateSyllabusRequest, Course } from '../core/_models';
 import { AcademicYearSelect } from '../components/AcademicYearSelect';
+import { CourseSelectionForSyllabus } from '../components/CourseSelectionForSyllabus';
 
 export const CreateSyllabus = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
-  const [courses, setCourses] = useState<CreateCourseRequest[]>([]);
-  const [newCourse, setNewCourse] = useState<CreateCourseRequest>({
-    title: '',
-    code: '',
-    year: 1,
-    semester: 1,
-    credits: 0,
-    lectureHours: 0,
-    seminarHours: 0,
-    labHours: 0,
-    practiceHours: 0,
-    courseTypeLabel: 'B',
-    examMethod: 'P',
-    electiveGroup: null,
-  });
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleAddCourse = () => {
-    if (!newCourse.title || !newCourse.code) {
-      return;
-    }
-
-    // Validate numeric fields
-    if (
-      isNaN(newCourse.semester) ||
-      isNaN(newCourse.credits) ||
-      isNaN(newCourse.lectureHours) ||
-      isNaN(newCourse.seminarHours) ||
-      isNaN(newCourse.labHours) ||
-      isNaN(newCourse.practiceHours)
-    ) {
-      return;
-    }
-
-    // Ensure all numeric fields are positive
-    if (
-      newCourse.semester < 1 ||
-      newCourse.credits < 0 ||
-      newCourse.lectureHours < 0 ||
-      newCourse.seminarHours < 0 ||
-      newCourse.labHours < 0 ||
-      newCourse.practiceHours < 0
-    ) {
-      return;
-    }
-
-    setCourses([
-      ...courses,
-      { ...newCourse }
-    ]);
-
-    // Reset form
-    setNewCourse({
-      title: '',
-      code: '',
-      year: 1,
-      semester: 1,
-      credits: 0,
-      lectureHours: 0,
-      seminarHours: 0,
-      labHours: 0,
-      practiceHours: 0,
-      courseTypeLabel: 'B',
-      examMethod: 'P',
-      electiveGroup: null,
-    });
+  const handleCoursesChange = (newCourses: Course[]) => {
+    setCourses(newCourses);
   };
-
-  const handleRemoveCourse = (index: number) => {
-    const updatedCourses = courses.filter((_, i) => i !== index);
-    setCourses(updatedCourses);
-  };
-
-  // Utility: Calculate totals
-  const getTotals = (courses: CreateCourseRequest[]) => {
-    const totals: Record<number, { [semester: number]: { credits: number; lecture: number; seminar: number; lab: number; practice: number; total: number } }> = {};
-    let overall = { credits: 0, lecture: 0, seminar: 0, lab: 0, practice: 0, total: 0 };
-    for (const c of courses) {
-      if (!totals[c.year]) totals[c.year] = {};
-      if (!totals[c.year][c.semester]) totals[c.year][c.semester] = { credits: 0, lecture: 0, seminar: 0, lab: 0, practice: 0, total: 0 };
-      totals[c.year][c.semester].credits += c.credits;
-      totals[c.year][c.semester].lecture += c.lectureHours;
-      totals[c.year][c.semester].seminar += c.seminarHours;
-      totals[c.year][c.semester].lab += c.labHours;
-      totals[c.year][c.semester].practice += c.practiceHours || 0;
-      totals[c.year][c.semester].total += c.lectureHours + c.seminarHours + c.labHours + (c.practiceHours || 0);
-      overall.credits += c.credits;
-      overall.lecture += c.lectureHours;
-      overall.seminar += c.seminarHours;
-      overall.lab += c.labHours;
-      overall.practice += c.practiceHours || 0;
-      overall.total += c.lectureHours + c.seminarHours + c.labHours + (c.practiceHours || 0);
-    }
-    return { totals, overall };
-  };
-
-  const { totals, overall } = getTotals(courses);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -139,20 +50,23 @@ export const CreateSyllabus = () => {
       setValidationError('Only one Elective II is allowed per syllabus.');
       return;
     }
+
     // Validation: 60 credits per year
     for (const year of [1, 2, 3]) {
-      const yearCredits = Object.values(totals[year] || {}).reduce((sum, s) => sum + s.credits, 0);
+      const yearCourses = courses.filter(c => c.year === year);
+      const yearCredits = yearCourses.reduce((sum, course) => sum + course.credits, 0);
       if (yearCredits !== 60) {
         setValidationError(`Year ${year} must have exactly 60 credits (currently ${yearCredits}).`);
         return;
       }
     }
+
     // Optionally, validate total credits
-    if (overall.credits !== 180) {
-      setValidationError(`Total credits must be 180 (currently ${overall.credits}).`);
+    const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+    if (totalCredits !== 180) {
+      setValidationError(`Total credits must be 180 (currently ${totalCredits}).`);
       return;
     }
-    // Optionally, validate hours per semester/year/overall as needed
 
     setIsSubmitting(true);
 
@@ -186,43 +100,43 @@ export const CreateSyllabus = () => {
     }
   };
 
+  // Calculate totals for display
+  const totals = courses.reduce((acc, course) => {
+    const year = course.year;
+    if (!acc[year]) {
+      acc[year] = { credits: 0, courses: 0 };
+    }
+    acc[year].credits += course.credits;
+    acc[year].courses += 1;
+    return acc;
+  }, {} as Record<number, { credits: number; courses: number }>);
+
+  const overall = {
+    credits: courses.reduce((sum, course) => sum + course.credits, 0),
+    courses: courses.length
+  };
+
   return (
-    <Box p={3}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/syllabus')}
-        sx={{ mb: 3 }}
-      >
-        Back to List
-      </Button>
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/syllabus')}
+        >
+          Back to Syllabuses
+        </Button>
+      </Box>
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Create New Syllabus
         </Typography>
+
         {validationError && (
-          <Typography color="error" sx={{ mb: 2 }}>{validationError}</Typography>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {validationError}
+          </Alert>
         )}
-        {/* Totals display */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Totals</Typography>
-          {Object.entries(totals).map(([year, semesters]) => (
-            <Box key={year} sx={{ mb: 1, pl: 2 }}>
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Year {year}:</Typography>
-              {Object.entries(semesters).map(([semester, t]) => (
-                <Typography key={semester} variant="body2" sx={{ ml: 2 }}>
-                  Semester {semester}: {t.credits} credits, {t.lecture} lecture, {t.seminar} seminar, {t.lab} lab, {t.practice} practice, {t.total} total hours
-                </Typography>
-              ))}
-              <Typography variant="body2" sx={{ ml: 2, fontWeight: 'bold' }}>
-                Year {year} total: {Object.values(semesters).reduce((sum, s) => sum + s.credits, 0)} credits
-              </Typography>
-            </Box>
-          ))}
-          <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1 }}>
-            Overall: {overall.credits} credits, {overall.lecture} lecture, {overall.seminar} seminar, {overall.lab} lab, {overall.practice} practice, {overall.total} total hours
-          </Typography>
-        </Box>
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'grid', gap: 3 }}>
@@ -249,227 +163,48 @@ export const CreateSyllabus = () => {
         </form>
 
         <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-          Add Courses
+          Course Management
         </Typography>
 
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            label="Course Title"
-            value={newCourse.title}
-            onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Course Code"
-            value={newCourse.code}
-            onChange={(e) => setNewCourse({ ...newCourse, code: e.target.value })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Year"
-            select
-            value={newCourse.year}
-            onChange={(e) => setNewCourse({ ...newCourse, year: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-            SelectProps={{ native: true }}
-          >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-          </TextField>
-          <TextField
-            label="Semester"
-            type="number"
-            value={newCourse.semester}
-            onChange={(e) => setNewCourse({ ...newCourse, semester: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Credits"
-            type="number"
-            value={newCourse.credits}
-            onChange={(e) => setNewCourse({ ...newCourse, credits: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Lecture Hours"
-            type="number"
-            value={newCourse.lectureHours}
-            onChange={(e) => setNewCourse({ ...newCourse, lectureHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Seminar Hours"
-            type="number"
-            value={newCourse.seminarHours}
-            onChange={(e) => setNewCourse({ ...newCourse, seminarHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Lab Hours"
-            type="number"
-            value={newCourse.labHours}
-            onChange={(e) => setNewCourse({ ...newCourse, labHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Practice Hours"
-            type="number"
-            value={newCourse.practiceHours}
-            onChange={(e) => setNewCourse({ ...newCourse, practiceHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            select
-            label="Course Type (Tipi)"
-            value={newCourse.courseTypeLabel}
-            onChange={(e) => setNewCourse({ ...newCourse, courseTypeLabel: e.target.value })}
-            margin="normal"
-            fullWidth
-            SelectProps={{ native: true }}
-          >
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="E">E</option>
-          </TextField>
-          {/* Elective Group field, only show if elective type */}
-          {(newCourse.courseTypeLabel === 'C' || newCourse.courseTypeLabel === 'E') && (
-            <TextField
-              select
-              label="Elective Group"
-              value={newCourse.electiveGroup ?? ''}
-              onChange={(e) => setNewCourse({ ...newCourse, electiveGroup: e.target.value || null })}
-              margin="normal"
-              fullWidth
-              SelectProps={{ native: true }}
-            >
-              <option value="">None</option>
-              <option value="Elective I">Elective I</option>
-              <option value="Elective II">Elective II</option>
-            </TextField>
-          )}
-          <TextField
-            select
-            label="Exam Method (Mënyra e Vlerësimit)"
-            value={newCourse.examMethod}
-            onChange={(e) => setNewCourse({ ...newCourse, examMethod: e.target.value })}
-            margin="normal"
-            fullWidth
-            SelectProps={{ native: true }}
-          >
-            <option value="P">P</option>
-            <option value="V">V</option>
-            <option value="F">F</option>
-          </TextField>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddCourse}
-            sx={{ mt: 2 }}
-          >
-            Add Course
-          </Button>
-        </Box>
+        <CourseSelectionForSyllabus
+          selectedCourses={courses}
+          onCoursesChange={handleCoursesChange}
+        />
 
-        <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-          Added Courses
-        </Typography>
-        <List>
-          {/* Group electives and mandatory courses */}
-          {(() => {
-            const electives = courses.filter(c => c.courseTypeLabel === 'C' || c.courseTypeLabel === 'E');
-            const electivesI = electives.filter(c => c.electiveGroup === 'Elective I');
-            const electivesII = electives.filter(c => c.electiveGroup === 'Elective II');
-            const otherElectives = electives.filter(c => !c.electiveGroup);
-            const mandatoryCourses = courses.filter(c => c.courseTypeLabel !== 'C' && c.courseTypeLabel !== 'E');
-            let idx = 1;
-            return (
-              <>
-                {/* Mandatory courses */}
-                {mandatoryCourses.map((course, i) => (
-                  <ListItem key={i} sx={{ background: '#f5f5f5', mb: 1, borderRadius: 1 }}>
-                    <ListItemText
-                      primary={`${idx++}. ${course.title}`}
-                      secondary={`Type: ${course.courseTypeLabel || 'B'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
-                    />
-                    <ListItemSecondaryAction>
-                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(i)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-                {/* Lëndë me zgjedhje group */}
-                {electives.length > 0 && (
-                  <ListItem sx={{ background: '#f3e5f5', fontWeight: 'bold', borderRadius: 1 }}>
-                    <ListItemText primary="Lëndë me zgjedhje" />
-                  </ListItem>
-                )}
-                {/* Elective I */}
-                {electivesI.length > 0 && (
-                  <ListItem sx={{ background: '#e3f2fd', fontWeight: 'bold', borderRadius: 1 }}>
-                    <ListItemText primary="Elective I" />
-                  </ListItem>
-                )}
-                {electivesI.map((course, i) => (
-                  <ListItem key={`ei-${i}`} sx={{ background: '#e3f2fd', mb: 1, borderRadius: 1 }}>
-                    <ListItemText
-                      primary={`${idx++}. ${course.title}`}
-                      secondary={`Type: ${course.courseTypeLabel || 'C'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
-                    />
-                    <ListItemSecondaryAction>
-                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(courses.indexOf(course))}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-                {/* Elective II */}
-                {electivesII.length > 0 && (
-                  <ListItem sx={{ background: '#fff3e0', fontWeight: 'bold', borderRadius: 1 }}>
-                    <ListItemText primary="Elective II" />
-                  </ListItem>
-                )}
-                {electivesII.map((course, i) => (
-                  <ListItem key={`eii-${i}`} sx={{ background: '#fff3e0', mb: 1, borderRadius: 1 }}>
-                    <ListItemText
-                      primary={`${idx++}. ${course.title}`}
-                      secondary={`Type: ${course.courseTypeLabel || 'C'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
-                    />
-                    <ListItemSecondaryAction>
-                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(courses.indexOf(course))}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-                {/* Other electives */}
-                {otherElectives.map((course, i) => (
-                  <ListItem key={`eo-${i}`} sx={{ background: '#f3e5f5', mb: 1, borderRadius: 1 }}>
-                    <ListItemText
-                      primary={`${idx++}. ${course.title}`}
-                      secondary={`Type: ${course.courseTypeLabel || 'C'}, Year: ${course.year}, Semester: ${course.semester}, Credits: ${course.credits}`}
-                    />
-                    <ListItemSecondaryAction>
-                      <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveCourse(courses.indexOf(course))}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </>
-            );
-          })()}
-        </List>
+        {/* Summary Section */}
+        {courses.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Syllabus Summary
+            </Typography>
+            
+            <Grid container spacing={2}>
+              {[1, 2, 3].map(year => (
+                <Grid key={year} sx={{ width: { xs: '100%', sm: 'calc(33.33% - 16px)' } }}>
+                  <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="h6">Year {year}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {totals[year]?.courses || 0} courses
+                    </Typography>
+                    <Typography variant="h5" color="primary">
+                      {totals[year]?.credits || 0} credits
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Paper sx={{ p: 2, mt: 2, textAlign: 'center', bgcolor: 'primary.main', color: 'white' }}>
+              <Typography variant="h6">Total</Typography>
+              <Typography variant="body2">
+                {overall.courses} courses
+              </Typography>
+              <Typography variant="h5">
+                {overall.credits} credits
+              </Typography>
+            </Paper>
+          </Box>
+        )}
       </Paper>
     </Box>
   );

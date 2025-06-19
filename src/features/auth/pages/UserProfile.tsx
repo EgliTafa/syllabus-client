@@ -19,6 +19,7 @@ import { useAuth } from '../hooks/useAuth';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useTheme } from '@mui/material/styles';
+import { CountryPrefixDropdown } from '../../../components';
 
 export const UserProfile = () => {
   const theme = useTheme();
@@ -83,6 +84,13 @@ export const UserProfile = () => {
     }));
   };
 
+  const handlePrefixChange = (value: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      phonePrefix: value
+    }));
+  };
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({
@@ -118,89 +126,64 @@ export const UserProfile = () => {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!validatePasswordForm()) {
       return;
     }
+
     try {
-      const response = await handleChangePassword(passwordData);
-      setUpdateStatus({
-        type: 'success',
-        message: response.message || 'Password changed successfully!',
-        show: true
+      await handleChangePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword
       });
-      // Clear password fields after successful change
+      
+      // Clear password form
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      // Clear any validation errors
-      setValidationErrors({});
+      
+      setUpdateStatus({
+        type: 'success',
+        message: 'Password changed successfully!',
+        show: true
+      });
     } catch (error: any) {
       setUpdateStatus({
         type: 'error',
         message: error.response?.data?.message || 'Failed to change password. Please try again.',
         show: true
       });
-      // Clear only the new password fields on error
-      setPasswordData(prev => ({
-        ...prev,
-        newPassword: '',
-        confirmPassword: ''
-      }));
     }
   };
 
-  const handleCloseStatus = () => {
+  const handleCloseSnackbar = () => {
     setUpdateStatus(prev => ({ ...prev, show: false }));
   };
 
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', py: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Avatar
-            sx={{
-              width: 80,
-              height: 80,
-              bgcolor: theme.palette.primary.main,
-              fontSize: '2rem',
-              mr: 2
-            }}
-          >
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
-          </Avatar>
-          <Box>
-            <Typography variant="h4" component="h1">
-              {user?.firstName} {user?.lastName}
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              {user?.email}
-            </Typography>
-          </Box>
-        </Box>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        User Profile
+      </Typography>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-        <Snackbar
-          open={updateStatus.show}
-          autoHideDuration={6000}
-          onClose={handleCloseStatus}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <Alert 
-            onClose={handleCloseStatus} 
-            severity={updateStatus.type}
-            sx={{ width: '100%' }}
-          >
-            {updateStatus.message}
-          </Alert>
-        </Snackbar>
-
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={4}>
           {/* Profile Information Section */}
           <Grid sx={{ width: '100%' }}>
@@ -244,13 +227,9 @@ export const UserProfile = () => {
                   />
                 </Grid>
                 <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-                  <TextField
-                    fullWidth
-                    label="Phone Prefix"
-                    name="phonePrefix"
+                  <CountryPrefixDropdown
                     value={profileData.phonePrefix}
-                    onChange={handleProfileChange}
-                    placeholder="+355"
+                    onChange={handlePrefixChange}
                     required
                     disabled={isFetching}
                   />
@@ -309,6 +288,7 @@ export const UserProfile = () => {
                           <IconButton
                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                             edge="end"
+                            disabled={isFetching}
                           >
                             {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -317,7 +297,7 @@ export const UserProfile = () => {
                     }}
                   />
                 </Grid>
-                <Grid sx={{ width: '100%' }}>
+                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                   <TextField
                     fullWidth
                     label="New Password"
@@ -335,6 +315,7 @@ export const UserProfile = () => {
                           <IconButton
                             onClick={() => setShowNewPassword(!showNewPassword)}
                             edge="end"
+                            disabled={isFetching}
                           >
                             {showNewPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -343,7 +324,7 @@ export const UserProfile = () => {
                     }}
                   />
                 </Grid>
-                <Grid sx={{ width: '100%' }}>
+                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                   <TextField
                     fullWidth
                     label="Confirm New Password"
@@ -361,6 +342,7 @@ export const UserProfile = () => {
                           <IconButton
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             edge="end"
+                            disabled={isFetching}
                           >
                             {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -384,6 +366,21 @@ export const UserProfile = () => {
           </Grid>
         </Grid>
       </Paper>
+
+      <Snackbar
+        open={updateStatus.show}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={updateStatus.type}
+          sx={{ width: '100%' }}
+        >
+          {updateStatus.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }; 
