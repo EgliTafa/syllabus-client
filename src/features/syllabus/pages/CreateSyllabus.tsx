@@ -119,12 +119,12 @@ export const CreateSyllabus = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/syllabus')}
-        >
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate('/syllabus')}
+      >
           Back to Syllabuses
-        </Button>
+      </Button>
       </Box>
 
       <Paper sx={{ p: 3 }}>
@@ -188,7 +188,7 @@ export const CreateSyllabus = () => {
                     </Typography>
                     <Typography variant="h5" color="primary">
                       {totals[year]?.credits || 0} credits
-                    </Typography>
+        </Typography>
                   </Paper>
                 </Grid>
               ))}
