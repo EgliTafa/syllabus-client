@@ -173,7 +173,7 @@ export const MainLayout = () => {
               {!isMobile && (
                 <>
                   <Button color="inherit" component={RouterLink} to="/syllabus">
-                    Syllabuses
+                    {t('nav.syllabuses')}
                   </Button>
                   <SyllabusHistoryDropdown />
                   {isAdmin() && (
@@ -182,15 +182,15 @@ export const MainLayout = () => {
                       component={RouterLink}
                       to="/admin/roles"
                     >
-                      Admin Role Assignment
+                      {t('nav.adminRole')}
                     </Button>
                   )}
                   <Button color="inherit" component={RouterLink} to="/courses">
-                    Courses
+                    {t('nav.courses')}
                   </Button>
                   {isAdmin() && (
                     <Button color="inherit" component={RouterLink} to="/ping">
-                      API Health Check
+                      {t('nav.apiHealthCheck')}
                     </Button>
                   )}
                 </>
@@ -239,9 +239,9 @@ export const MainLayout = () => {
                 </Box>
                 <Divider sx={{ my: 1 }} />
                 <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>
-                  Profile
+                  {t('nav.profile')}
                 </MenuItem>
-                <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
+                <MenuItem onClick={handleLogoutClick}>{t('nav.logout')}</MenuItem>
               </Menu>
             </>
           ) : (
@@ -249,10 +249,10 @@ export const MainLayout = () => {
               {!isMobile && (
                 <>
                   <Button color="inherit" component={RouterLink} to="/login">
-                    Login
+                    {t('nav.login')}
                   </Button>
                   <Button color="inherit" component={RouterLink} to="/register">
-                    Register
+                    {t('nav.register')}
                   </Button>
                 </>
               )}
