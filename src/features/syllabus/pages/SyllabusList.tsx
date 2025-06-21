@@ -12,11 +12,13 @@ import {
 import { useGetAllSyllabuses } from '../hooks/useSyllabuses';
 import AddIcon from '@mui/icons-material/Add';
 import { useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 
 export const SyllabusList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { syllabusList, isFetching, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchAndUpdateSyllabuses(dispatch);
@@ -33,13 +35,13 @@ export const SyllabusList = () => {
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Syllabuses</Typography>
+        <Typography variant="h4">{t('syllabusList.title')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/syllabus/create')}
         >
-          Create Syllabus
+          {t('syllabusList.create')}
         </Button>
       </Box>
 
@@ -70,7 +72,7 @@ export const SyllabusList = () => {
                   {syllabus.name}
                 </Typography>
                 <Typography color="textSecondary">
-                  {syllabus.courses.length} Courses
+                  {t('syllabusList.courses', { count: syllabus.courses.length })}
                 </Typography>
               </CardContent>
             </Card>

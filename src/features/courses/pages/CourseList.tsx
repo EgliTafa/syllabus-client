@@ -11,10 +11,12 @@ import {
 } from '@mui/material';
 import { useCourses } from '../hooks/useCourses';
 import AddIcon from '@mui/icons-material/Add';
+import { useTranslation } from 'react-i18next';
 
 export const CourseList = () => {
   const navigate = useNavigate();
   const { courseList, isFetching, loadCourses } = useCourses();
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadCourses();
@@ -31,13 +33,13 @@ export const CourseList = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Courses</Typography>
+        <Typography variant="h4">{t('courseList.title')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/courses/create')}
         >
-          Create Course
+          {t('courseList.createCourse')}
         </Button>
       </Box>
 
@@ -73,13 +75,13 @@ export const CourseList = () => {
                   {course.code}
                 </Typography>
                 <Typography variant="body2">
-                  Semester: {course.semester}
+                  {t('courseList.semester')}: {course.semester}
                 </Typography>
                 <Typography variant="body2">
-                  Credits: {course.credits}
+                  {t('courseList.credits')}: {course.credits}
                 </Typography>
                 <Typography variant="body2">
-                  Type: {course.type}
+                  {t('courseList.type')}: {course.type}
                 </Typography>
               </CardContent>
             </Card>
