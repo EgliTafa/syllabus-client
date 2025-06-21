@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -35,6 +36,7 @@ import {
 } from '@mui/icons-material';
 import { adminApi, UpdateUserRequest } from '../api/adminApi';
 import { CountryPrefixDropdown } from '../../../components/CountryPrefixDropdown';
+import { decodeToken } from '../../../utils/jwtUtils';
 
 interface User {
   id: string;
@@ -76,6 +78,7 @@ interface RevokeAccessForm {
 }
 
 export const UserManagementPage: React.FC = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +116,12 @@ export const UserManagementPage: React.FC = () => {
     lockoutDurationDays: undefined,
   });
 
+  // Get current user info from JWT
+  const token = localStorage.getItem('token');
+  const currentUser = token ? decodeToken(token) : null;
+  const currentUserId = currentUser?.sub || currentUser?.id || '';
+  const currentUserEmail = currentUser?.email || '';
+
   const roles = ['Student', 'Professor', 'Administrator'];
 
   useEffect(() => {
@@ -126,7 +135,7 @@ export const UserManagementPage: React.FC = () => {
       const response = await adminApi.getAllUsers();
       setUsers(response);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch users');
+      setError(err.response?.data?.message || t('userManagement.failedToFetch'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +146,7 @@ export const UserManagementPage: React.FC = () => {
       setError(null);
       setSuccess(null);
       await adminApi.createUser(createUserForm);
-      setSuccess('User created successfully');
+      setSuccess(t('userManagement.userCreated'));
       setCreateDialogOpen(false);
       setCreateUserForm({
         firstName: '',
@@ -150,7 +159,7 @@ export const UserManagementPage: React.FC = () => {
       });
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create user');
+      setError(err.response?.data?.message || t('userManagement.failedToCreate'));
     }
   };
 
@@ -168,7 +177,7 @@ export const UserManagementPage: React.FC = () => {
         profilePictureUrl: editUserForm.profilePictureUrl,
       };
       await adminApi.updateUser(editingUserId, updateData);
-      setSuccess('User updated successfully');
+      setSuccess(t('userManagement.userUpdated'));
       setEditDialogOpen(false);
       setEditingUserId('');
       setEditUserForm({
@@ -181,18 +190,40 @@ export const UserManagementPage: React.FC = () => {
       });
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update user');
+      setError(err.response?.data?.message || t('userManagement.failedToUpdate'));
     }
   };
 
   const openEditDialog = (user: User) => {
+    // Parse phone number: backend sends it as "prefix+number" (e.g., "+355123456789")
+    let phonePrefix = '+355'; // Default to Albania
+    let phoneNumber = '';
+    
+    if (user.phoneNumber) {
+      // Try to find a known prefix in the phone number
+      const knownPrefixes = ['+355', '+1', '+44', '+33', '+49', '+39', '+34', '+30', '+31', '+32', '+43', '+45', '+46', '+47', '+48', '+351', '+352', '+353', '+354', '+356', '+357', '+358', '+359', '+36', '+370', '+371', '+372', '+373', '+374', '+375', '+376', '+377', '+378', '+380', '+381', '+382', '+383', '+385', '+386', '+387', '+389', '+420', '+421', '+423'];
+      
+      for (const prefix of knownPrefixes) {
+        if (user.phoneNumber.startsWith(prefix)) {
+          phonePrefix = prefix;
+          phoneNumber = user.phoneNumber.substring(prefix.length);
+          break;
+        }
+      }
+      
+      // If no known prefix found, assume it's just a number
+      if (!phoneNumber) {
+        phoneNumber = user.phoneNumber;
+      }
+    }
+
     setEditingUserId(user.id);
     setEditUserForm({
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      phonePrefix: user.phoneNumber.split(' ')[0] || '+355',
-      phoneNumber: user.phoneNumber.split(' ').slice(1).join(' ') || '',
+      phonePrefix: phonePrefix,
+      phoneNumber: phoneNumber,
       role: user.roles[0] || 'Student',
       profilePictureUrl: '',
     });
@@ -204,13 +235,13 @@ export const UserManagementPage: React.FC = () => {
       setError(null);
       setSuccess(null);
       await adminApi.revokeUserAccess(selectedUserId, revokeForm);
-      setSuccess('User access revoked successfully');
+      setSuccess(t('userManagement.accessRevoked'));
       setRevokeDialogOpen(false);
       setSelectedUserId('');
       setRevokeForm({ reason: '', lockoutDurationDays: undefined });
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to revoke user access');
+      setError(err.response?.data?.message || t('userManagement.failedToRevoke'));
     }
   };
 
@@ -219,15 +250,15 @@ export const UserManagementPage: React.FC = () => {
       setError(null);
       setSuccess(null);
       await adminApi.restoreUserAccess(userId);
-      setSuccess('User access restored successfully');
+      setSuccess(t('userManagement.accessRestored'));
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to restore user access');
+      setError(err.response?.data?.message || t('userManagement.failedToRestore'));
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    if (!window.confirm(t('userManagement.deleteConfirmation'))) {
       return;
     }
 
@@ -235,10 +266,10 @@ export const UserManagementPage: React.FC = () => {
       setError(null);
       setSuccess(null);
       await adminApi.deleteUser(userId);
-      setSuccess('User deleted successfully');
+      setSuccess(t('userManagement.userDeleted'));
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete user');
+      setError(err.response?.data?.message || t('userManagement.failedToDelete'));
     }
   };
 
@@ -248,11 +279,11 @@ export const UserManagementPage: React.FC = () => {
   };
 
   const formatPhoneNumber = (phoneNumber: string) => {
-    return phoneNumber || 'N/A';
+    return phoneNumber || t('userManagement.nA');
   };
 
   const formatLockoutEnd = (lockoutEnd: string | null) => {
-    if (!lockoutEnd) return 'Not locked';
+    if (!lockoutEnd) return t('userManagement.notLocked');
     const date = new Date(lockoutEnd);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
@@ -261,11 +292,16 @@ export const UserManagementPage: React.FC = () => {
     return user.lockoutEnabled && user.lockoutEnd && new Date(user.lockoutEnd) > new Date();
   };
 
+  // Filter out the current user from the users list
+  const filteredUsers = users.filter(
+    (user) => user.id !== currentUserId && user.email !== currentUserEmail
+  );
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h5" component="h2" color="text.primary">
-          User Management
+          {t('userManagement.title')}
         </Typography>
         <Button
           variant="contained"
@@ -273,7 +309,7 @@ export const UserManagementPage: React.FC = () => {
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
         >
-          Create User
+          {t('userManagement.createUser')}
         </Button>
       </Box>
 
@@ -286,17 +322,17 @@ export const UserManagementPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Roles</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Email Confirmed</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t('userManagement.name')}</TableCell>
+                <TableCell>{t('userManagement.email')}</TableCell>
+                <TableCell>{t('userManagement.phoneNumber')}</TableCell>
+                <TableCell>{t('userManagement.roles')}</TableCell>
+                <TableCell>{t('userManagement.status')}</TableCell>
+                <TableCell>{t('userManagement.emailConfirmed')}</TableCell>
+                <TableCell>{t('userManagement.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     {user.firstName} {user.lastName}
@@ -315,31 +351,33 @@ export const UserManagementPage: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={isUserLocked(user) ? 'Locked' : user.status}
+                      label={isUserLocked(user) ? t('userManagement.locked') : user.status}
                       color={isUserLocked(user) ? 'error' : 'default'}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={user.emailConfirmed ? 'Yes' : 'No'}
+                      label={user.emailConfirmed ? t('userManagement.yes') : t('userManagement.no')}
                       color={user.emailConfirmed ? 'success' : 'warning'}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Edit User">
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          onClick={() => openEditDialog(user)}
-                        >
-                          <EditIcon />
-                        </IconButton>
+                      <Tooltip title={t('userManagement.editUser')}>
+                        <span>
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() => openEditDialog(user)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                       {isUserLocked(user) ? (
-                        <Tooltip title="Restore Access">
+                        <Tooltip title={t('userManagement.restoreAccess')}>
                           <IconButton
                             color="success"
                             size="small"
@@ -349,7 +387,7 @@ export const UserManagementPage: React.FC = () => {
                           </IconButton>
                         </Tooltip>
                       ) : (
-                        <Tooltip title="Revoke Access">
+                        <Tooltip title={t('userManagement.revokeAccess')}>
                           <IconButton
                             color="warning"
                             size="small"
@@ -359,7 +397,7 @@ export const UserManagementPage: React.FC = () => {
                           </IconButton>
                         </Tooltip>
                       )}
-                      <Tooltip title="Delete User">
+                      <Tooltip title={t('userManagement.deleteUser')}>
                         <IconButton
                           color="error"
                           size="small"
@@ -379,30 +417,30 @@ export const UserManagementPage: React.FC = () => {
 
       {/* Create User Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New User</DialogTitle>
+        <DialogTitle>{t('userManagement.createUser')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
-              label="First Name"
+              label={t('userManagement.firstName')}
               value={createUserForm.firstName}
               onChange={(e) => setCreateUserForm({ ...createUserForm, firstName: e.target.value })}
               required
             />
             <TextField
-              label="Last Name"
+              label={t('userManagement.lastName')}
               value={createUserForm.lastName}
               onChange={(e) => setCreateUserForm({ ...createUserForm, lastName: e.target.value })}
               required
             />
             <TextField
-              label="Email"
+              label={t('userManagement.email')}
               type="email"
               value={createUserForm.email}
               onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
               required
             />
             <TextField
-              label="Password"
+              label={t('userManagement.password')}
               type="password"
               value={createUserForm.password}
               onChange={(e) => setCreateUserForm({ ...createUserForm, password: e.target.value })}
@@ -413,22 +451,22 @@ export const UserManagementPage: React.FC = () => {
                 <CountryPrefixDropdown
                   value={createUserForm.phonePrefix}
                   onChange={(value) => setCreateUserForm({ ...createUserForm, phonePrefix: value })}
-                  label="Phone Prefix"
+                  label={t('userManagement.phonePrefix')}
                   fullWidth={false}
                 />
               </Box>
               <TextField
-                label="Phone Number"
+                label={t('userManagement.phoneNumber')}
                 value={createUserForm.phoneNumber}
                 onChange={(e) => setCreateUserForm({ ...createUserForm, phoneNumber: e.target.value })}
                 sx={{ width: '60%' }}
               />
             </Box>
             <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
+              <InputLabel>{t('userManagement.role')}</InputLabel>
               <Select
                 value={createUserForm.role}
-                label="Role"
+                label={t('userManagement.role')}
                 onChange={(e) => setCreateUserForm({ ...createUserForm, role: e.target.value })}
               >
                 {roles.map((role) => (
@@ -439,43 +477,43 @@ export const UserManagementPage: React.FC = () => {
               </Select>
             </FormControl>
             <TextField
-              label="Profile Picture URL (Optional)"
+              label={t('userManagement.profilePictureUrl')}
               value={createUserForm.profilePictureUrl || ''}
               onChange={(e) => setCreateUserForm({ ...createUserForm, profilePictureUrl: e.target.value })}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setCreateDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button 
             onClick={handleCreateUser} 
             variant="contained"
             disabled={!createUserForm.firstName || !createUserForm.lastName || !createUserForm.email || !createUserForm.password}
           >
-            Create User
+            {t('userManagement.createUser')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit User Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit User</DialogTitle>
+        <DialogTitle>{t('userManagement.editUser')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
-              label="First Name"
+              label={t('userManagement.firstName')}
               value={editUserForm.firstName}
               onChange={(e) => setEditUserForm({ ...editUserForm, firstName: e.target.value })}
               required
             />
             <TextField
-              label="Last Name"
+              label={t('userManagement.lastName')}
               value={editUserForm.lastName}
               onChange={(e) => setEditUserForm({ ...editUserForm, lastName: e.target.value })}
               required
             />
             <TextField
-              label="Email"
+              label={t('userManagement.email')}
               type="email"
               value={editUserForm.email}
               onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
@@ -486,22 +524,22 @@ export const UserManagementPage: React.FC = () => {
                 <CountryPrefixDropdown
                   value={editUserForm.phonePrefix}
                   onChange={(value) => setEditUserForm({ ...editUserForm, phonePrefix: value })}
-                  label="Phone Prefix"
+                  label={t('userManagement.phonePrefix')}
                   fullWidth={false}
                 />
               </Box>
               <TextField
-                label="Phone Number"
+                label={t('userManagement.phoneNumber')}
                 value={editUserForm.phoneNumber}
                 onChange={(e) => setEditUserForm({ ...editUserForm, phoneNumber: e.target.value })}
                 sx={{ width: '60%' }}
               />
             </Box>
             <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
+              <InputLabel>{t('userManagement.role')}</InputLabel>
               <Select
                 value={editUserForm.role}
-                label="Role"
+                label={t('userManagement.role')}
                 onChange={(e) => setEditUserForm({ ...editUserForm, role: e.target.value })}
               >
                 {roles.map((role) => (
@@ -512,52 +550,52 @@ export const UserManagementPage: React.FC = () => {
               </Select>
             </FormControl>
             <TextField
-              label="Profile Picture URL (Optional)"
+              label={t('userManagement.profilePictureUrl')}
               value={editUserForm.profilePictureUrl || ''}
               onChange={(e) => setEditUserForm({ ...editUserForm, profilePictureUrl: e.target.value })}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setEditDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button 
             onClick={handleEditUser} 
             variant="contained"
             disabled={!editUserForm.firstName || !editUserForm.lastName || !editUserForm.email}
           >
-            Update User
+            {t('userManagement.updateUser')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Revoke Access Dialog */}
       <Dialog open={revokeDialogOpen} onClose={() => setRevokeDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Revoke User Access</DialogTitle>
+        <DialogTitle>{t('userManagement.revokeAccess')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
-              label="Reason (Optional)"
+              label={t('userManagement.reason')}
               multiline
               rows={3}
               value={revokeForm.reason || ''}
               onChange={(e) => setRevokeForm({ ...revokeForm, reason: e.target.value })}
             />
             <TextField
-              label="Lockout Duration (Days, leave empty for permanent)"
+              label={t('userManagement.lockoutDuration')}
               type="number"
               value={revokeForm.lockoutDurationDays || ''}
               onChange={(e) => setRevokeForm({ 
                 ...revokeForm, 
                 lockoutDurationDays: e.target.value ? parseInt(e.target.value) : undefined 
               })}
-              helperText="Leave empty for permanent lockout"
+              helperText={t('userManagement.lockoutDurationHelp')}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRevokeDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setRevokeDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleRevokeAccess} variant="contained" color="warning">
-            Revoke Access
+            {t('userManagement.revokeAccess')}
           </Button>
         </DialogActions>
       </Dialog>
