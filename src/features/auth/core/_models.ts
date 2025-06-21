@@ -34,6 +34,7 @@ export interface LoginResponse {
   email: string;
   token: string;
   roles?: UserRole[];
+  emailConfirmed: boolean;
 }
 
 export interface ForgotPasswordRequest {
@@ -90,4 +91,5 @@ export interface User {
   email: string;
   token: string;
   roles: UserRole[];
+  emailConfirmed: boolean;
 } 

@@ -76,6 +76,15 @@ const resources = {
         notFound: 'Not found',
         loading: 'Loading...',
       },
+      emailConfirmation: {
+        title: 'Email Confirmation Required',
+        message: 'Please confirm your email address to access all features. Check your inbox for a confirmation link.',
+        resendButton: 'Resend Confirmation Email',
+        resending: 'Sending...',
+        resent: 'Confirmation email sent successfully',
+        failedToResend: 'Failed to send confirmation email',
+        dismiss: 'Dismiss',
+      },
       userManagement: {
         title: 'User Management',
         createUser: 'Create User',
@@ -324,6 +333,15 @@ const resources = {
         delete: 'Fshi',
         notFound: 'Nuk u gjet',
         loading: 'Duke u ngarkuar...',
+      },
+      emailConfirmation: {
+        title: 'Konfirmimi i Email-it Kërkohet',
+        message: 'Ju lutemi konfirmoni adresën tuaj të email-it për të aksesuar të gjitha veçoritë. Kontrolloni kutinë tuaj për një lidhje konfirmimi.',
+        resendButton: 'Ridërgo Email-in e Konfirmimit',
+        resending: 'Duke dërguar...',
+        resent: 'Email-i i konfirmimit u dërgua me sukses',
+        failedToResend: 'Dështoi dërgimi i email-it të konfirmimit',
+        dismiss: 'Anulo',
       },
       userManagement: {
         title: 'Menaxhimi i Përdoruesve',

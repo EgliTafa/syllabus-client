@@ -129,4 +129,14 @@ export const authApi = {
     const response = await api.post<ChangePasswordResponse>('/change-password', data);
     return response.data;
   },
+
+  /**
+   * Resend email confirmation
+   */
+  resendEmailConfirmation: async (email: string): Promise<{ message: string }> => {
+    const response = await api.post<{ message: string }>('/resend-email-confirmation', {
+      email,
+    });
+    return response.data;
+  },
 }; 

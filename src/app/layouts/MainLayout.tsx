@@ -30,6 +30,7 @@ import { useDispatch } from "react-redux";
 import { SyllabusHistoryDropdown } from "../../features/syllabus/components/SyllabusHistoryDropdown";
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '../../components/LanguageToggle';
+import { EmailConfirmationReminder } from '../../components/EmailConfirmationReminder';
 
 export const MainLayout = () => {
   const navigate = useNavigate();
@@ -272,6 +273,7 @@ export const MainLayout = () => {
         </Toolbar>
       </AppBar>
       {renderMobileMenu()}
+      <EmailConfirmationReminder />
       <Container component="main" sx={{ flexGrow: 1, py: 3 }}>
         <Outlet />
       </Container>
