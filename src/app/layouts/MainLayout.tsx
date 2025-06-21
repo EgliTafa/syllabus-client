@@ -28,6 +28,8 @@ import { ThemeToggle } from "../components";
 import { useGetAllSyllabuses } from "../../features/syllabus/hooks/useSyllabuses";
 import { useDispatch } from "react-redux";
 import { SyllabusHistoryDropdown } from "../../features/syllabus/components/SyllabusHistoryDropdown";
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '../../components/LanguageToggle';
 
 export const MainLayout = () => {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ export const MainLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { syllabusList, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -95,10 +98,10 @@ export const MainLayout = () => {
           {isAuthenticated ? (
             <>
               <ListItem component={RouterLink} to="/syllabus" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="Syllabuses" />
+                <ListItemText primary={t('nav.syllabuses')} />
               </ListItem>
               <ListItem>
-                <ListItemText primary="Syllabus History" primaryTypographyProps={{ fontWeight: 'bold' }} />
+                <ListItemText primary={t('nav.syllabusHistory')} primaryTypographyProps={{ fontWeight: 'bold' }} />
               </ListItem>
               {academicYears.map((year) => (
                 <ListItem
@@ -113,32 +116,32 @@ export const MainLayout = () => {
               ))}
               {isAdmin() && (
                 <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
-                  <ListItemText primary="Admin Role Assignment" />
+                  <ListItemText primary={t('nav.adminRole')} />
                 </ListItem>
               )}
               <ListItem component={RouterLink} to="/courses" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="Courses" />
+                <ListItemText primary={t('nav.courses')} />
               </ListItem>
               <Divider />
               {isAdmin() && (
                 <ListItem component={RouterLink} to="/ping" onClick={handleMobileMenuToggle}>
-                  <ListItemText primary="API Health Check" />
+                  <ListItemText primary={t('nav.apiHealthCheck')} />
                 </ListItem>
               )}
               <ListItem component={RouterLink} to="/profile" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="Profile" />
+                <ListItemText primary={t('nav.profile')} />
               </ListItem>
               <ListItem onClick={handleLogoutClick}>
-                <ListItemText primary="Logout" />
+                <ListItemText primary={t('nav.logout')} />
               </ListItem>
             </>
           ) : (
             <>
               <ListItem component={RouterLink} to="/login" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="Login" />
+                <ListItemText primary={t('nav.login')} />
               </ListItem>
               <ListItem component={RouterLink} to="/register" onClick={handleMobileMenuToggle}>
-                <ListItemText primary="Register" />
+                <ListItemText primary={t('nav.register')} />
               </ListItem>
             </>
           )}
@@ -163,14 +166,14 @@ export const MainLayout = () => {
             }}
             onClick={handleTitleClick}
           >
-            Syllabus Management
+            {t('nav.management')}
           </Typography>
           {isAuthenticated ? (
             <>
               {!isMobile && (
                 <>
                   <Button color="inherit" component={RouterLink} to="/syllabus">
-                    Syllabuses
+                    {t('nav.syllabuses')}
                   </Button>
                   <SyllabusHistoryDropdown />
                   {isAdmin() && (
@@ -179,15 +182,15 @@ export const MainLayout = () => {
                       component={RouterLink}
                       to="/admin/roles"
                     >
-                      Admin Role Assignment
+                      {t('nav.adminRole')}
                     </Button>
                   )}
                   <Button color="inherit" component={RouterLink} to="/courses">
-                    Courses
+                    {t('nav.courses')}
                   </Button>
                   {isAdmin() && (
                     <Button color="inherit" component={RouterLink} to="/ping">
-                      API Health
+                      {t('nav.apiHealthCheck')}
                     </Button>
                   )}
                 </>
@@ -231,10 +234,14 @@ export const MainLayout = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
+                <Box display="flex" justifyContent="center" alignItems="center" py={1}>
+                  <LanguageToggle />
+                </Box>
+                <Divider sx={{ my: 1 }} />
                 <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>
-                  Profile
+                  {t('nav.profile')}
                 </MenuItem>
-                <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
+                <MenuItem onClick={handleLogoutClick}>{t('nav.logout')}</MenuItem>
               </Menu>
             </>
           ) : (
@@ -242,10 +249,10 @@ export const MainLayout = () => {
               {!isMobile && (
                 <>
                   <Button color="inherit" component={RouterLink} to="/login">
-                    Login
+                    {t('nav.login')}
                   </Button>
                   <Button color="inherit" component={RouterLink} to="/register">
-                    Register
+                    {t('nav.register')}
                   </Button>
                 </>
               )}

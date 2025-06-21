@@ -33,6 +33,7 @@ import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { usePing } from '../hooks/usePing';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { HealthCheckItem } from '../core/_models';
+import { useTranslation } from 'react-i18next';
 
 export const PingPage = () => {
   const {
@@ -56,6 +57,7 @@ export const PingPage = () => {
   
   const { isAuthenticated, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'manual' | 'periodic' | 'health'>('manual');
+  const { t } = useTranslation();
 
   useEffect(() => {
     clearError();
@@ -117,7 +119,7 @@ export const PingPage = () => {
           {item.name}
         </Typography>
         <Chip 
-          label={item.status} 
+          label={t(`ping.${item.status.toLowerCase()}`, item.status)} 
           color={getStatusColor(item.status) as any}
           size="small"
         />
@@ -127,7 +129,7 @@ export const PingPage = () => {
       </Typography>
       {item.responseTime > 0 && (
         <Typography variant="caption" color="text.secondary">
-          Response time: {item.responseTime}ms
+          {t('ping.responseTime')}: {item.responseTime}ms
         </Typography>
       )}
     </Box>
@@ -138,11 +140,11 @@ export const PingPage = () => {
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Time</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Endpoint</TableCell>
-            <TableCell>Response Time</TableCell>
-            <TableCell>Message</TableCell>
+            <TableCell>{t('ping.time')}</TableCell>
+            <TableCell>{t('ping.status')}</TableCell>
+            <TableCell>{t('ping.endpoint')}</TableCell>
+            <TableCell>{t('ping.responseTime')}</TableCell>
+            <TableCell>{t('ping.message')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -151,7 +153,7 @@ export const PingPage = () => {
               <TableCell>{result.timestamp.toLocaleTimeString()}</TableCell>
               <TableCell>
                 <Chip 
-                  label={result.success ? 'Success' : 'Failed'} 
+                  label={t(result.success ? 'ping.success' : 'ping.failed')} 
                   color={result.success ? 'success' : 'error'}
                   size="small"
                 />
@@ -160,8 +162,8 @@ export const PingPage = () => {
               <TableCell>{result.responseTime}ms</TableCell>
               <TableCell>
                 {result.success 
-                  ? 'OK' 
-                  : result.error || 'Unknown error'
+                  ? t('ping.ok') 
+                  : result.error ? result.error : t('ping.unknownError')
                 }
               </TableCell>
             </TableRow>
@@ -174,11 +176,11 @@ export const PingPage = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        API Health Check
+        {t('ping.title')}
       </Typography>
       
       <Alert severity="info" sx={{ mb: 3 }}>
-        This feature is only available to administrators. Use it to test API connectivity and health status.
+        {t('ping.adminInfo')}
       </Alert>
 
       {error && (
@@ -194,20 +196,20 @@ export const PingPage = () => {
           onClick={() => setActiveTab('manual')}
           sx={{ mr: 1 }}
         >
-          Manual Tests
+          {t('ping.manualTests')}
         </Button>
         <Button
           variant={activeTab === 'health' ? 'contained' : 'outlined'}
           onClick={() => setActiveTab('health')}
           sx={{ mr: 1 }}
         >
-          Health Check
+          {t('ping.healthCheck')}
         </Button>
         <Button
           variant={activeTab === 'periodic' ? 'contained' : 'outlined'}
           onClick={() => setActiveTab('periodic')}
         >
-          Periodic Monitoring
+          {t('ping.periodic')}
         </Button>
       </Box>
 

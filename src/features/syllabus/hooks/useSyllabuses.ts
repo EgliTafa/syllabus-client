@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllSyllabuses, fetchSyllabusById } from "../core/_requests";
 import {
@@ -32,7 +32,9 @@ const fetchAndUpdateSyllabusById = async (
   dispatch: Dispatch<AnyAction>
 ) => {
   isLoading = store.getState().syllabus.isFetching;
-  if (!syllabusId || isLoading) return;
+  if (!syllabusId || isLoading) {
+    return;
+  }
 
   dispatch(setIsFetching(true));
   try {
@@ -69,11 +71,15 @@ export const useGetSyllabusById = (syllabusId?: number) => {
     (state: IStateStore) => state.syllabus.isFetching
   );
 
+  const fetchAndUpdateSyllabusByIdInternal = useCallback(async (id: number) => {
+    await fetchAndUpdateSyllabusById(id, dispatch);
+  }, [dispatch]);
+
   useEffect(() => {
     if (syllabusId) {
       fetchAndUpdateSyllabusById(syllabusId, dispatch);
     }
-  }, [syllabusId]);
+  }, [syllabusId, dispatch]);
 
-  return { selectedSyllabus, isFetching, fetchAndUpdateSyllabusById };
+  return { selectedSyllabus, isFetching, fetchAndUpdateSyllabusById: fetchAndUpdateSyllabusByIdInternal };
 };
