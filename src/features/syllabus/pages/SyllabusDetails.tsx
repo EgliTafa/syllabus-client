@@ -885,19 +885,40 @@ export const SyllabusDetails = () => {
           </Typography>
           <Grid container spacing={2}>
             <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
-              <Typography variant="body2" color="text.secondary">
-                • Basic courses are marked with (B)
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
+                Course Types:
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Elective courses are marked with (C)
+                • A - Kurse të detyrueshme (Mandatory courses)
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Optional courses are marked with (E)
+                • B - Kurse të detyrueshme (Basic courses)
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • C - Me Zgjedhje (Elective courses)
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • D - Disiplinë e përgjithshme (General discipline)
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • E - Provim Diplome (Final exam/project)
               </Typography>
             </Grid>
             <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
+                Evaluation Methods:
+              </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Evaluation Methods: Exam (P), Observation (V), Attendance (F)
+                • P - Provim (Exam)
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • V - Vlerësim (Assessment/Observation)
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • F - Frekuentim (Attendance)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                • Provim Diplome - Final project defense
               </Typography>
             </Grid>
           </Grid>
