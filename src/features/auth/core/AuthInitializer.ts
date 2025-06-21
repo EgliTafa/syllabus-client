@@ -1,4 +1,5 @@
 import { User } from './_models';
+import { isTokenExpired } from '../../../utils/jwtUtils';
 
 export class AuthInitializer {
   private static readonly AUTH_STATE_KEY = 'authState';
@@ -24,6 +25,15 @@ export class AuthInitializer {
       if (!this.isValidAuthState(state)) {
         this.clearAuthState();
         return this.getDefaultState();
+      }
+
+      // Check if user has a valid token
+      if (state.user?.token) {
+        if (isTokenExpired(state.user.token)) {
+          console.log('Stored token is expired, clearing auth state');
+          this.clearAuthState();
+          return this.getDefaultState();
+        }
       }
 
       return state;
@@ -55,6 +65,7 @@ export class AuthInitializer {
    */
   public static clearAuthState(): void {
     localStorage.removeItem(this.AUTH_STATE_KEY);
+    localStorage.removeItem('token'); // Also clear the legacy token storage
   }
 
   /**
@@ -74,6 +85,17 @@ export class AuthInitializer {
   public static getToken(): string | null {
     const state = this.loadInitialState();
     return state.user?.token ?? null;
+  }
+
+  /**
+   * Checks if the stored token is valid
+   */
+  public static isTokenValid(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return false;
+    }
+    return !isTokenExpired(token);
   }
 
   /**

@@ -11,19 +11,28 @@ import {
   Checkbox,
   TextField,
   InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { Course } from '../core/_models';
+import { Course } from '../../courses/core/_models';
+
+interface SelectedCourse {
+  courseId: number;
+  year: number;
+}
 
 interface CourseSelectionDialogProps {
   availableCourses: Course[];
-  selectedCourseIds: number[];
-  onSelectionChange: (courseIds: number[]) => void;
+  selectedCourses: SelectedCourse[];
+  onSelectionChange: (selectedCourses: SelectedCourse[]) => void;
 }
 
 export const CourseSelectionDialog = ({
   availableCourses,
-  selectedCourseIds,
+  selectedCourses,
   onSelectionChange,
 }: CourseSelectionDialogProps) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,12 +47,55 @@ export const CourseSelectionDialog = ({
     setFilteredCourses(filtered);
   }, [searchTerm, availableCourses]);
 
-  const handleCourseSelection = (courseId: number) => {
-    const newSelection = selectedCourseIds.includes(courseId)
-      ? selectedCourseIds.filter(id => id !== courseId)
-      : [...selectedCourseIds, courseId];
+  const isCourseSelected = (courseId: number) => {
+    return selectedCourses.some(sc => sc.courseId === courseId);
+  };
+
+  const getSelectedYear = (courseId: number) => {
+    const selected = selectedCourses.find(sc => sc.courseId === courseId);
+    return selected ? selected.year : 1;
+  };
+
+  const handleCourseSelection = (courseId: number, checked: boolean) => {
+    if (checked) {
+      // Add course with default year 1
+      const newSelection = [...selectedCourses, { courseId, year: 1 }];
+      onSelectionChange(newSelection);
+    } else {
+      // Remove course
+      const newSelection = selectedCourses.filter(sc => sc.courseId !== courseId);
+      onSelectionChange(newSelection);
+    }
+  };
+
+  const handleYearChange = (courseId: number, year: number) => {
+    const newSelection = selectedCourses.map(sc => 
+      sc.courseId === courseId ? { ...sc, year } : sc
+    );
     onSelectionChange(newSelection);
   };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Add all filtered courses with default year 1
+      const newSelection = [
+        ...selectedCourses,
+        ...filteredCourses
+          .filter(course => !isCourseSelected(course.id))
+          .map(course => ({ courseId: course.id, year: 1 }))
+      ];
+      onSelectionChange(newSelection);
+    } else {
+      // Remove all filtered courses
+      const newSelection = selectedCourses.filter(sc => 
+        !filteredCourses.find(course => course.id === sc.courseId)
+      );
+      onSelectionChange(newSelection);
+    }
+  };
+
+  const selectedFilteredCount = filteredCourses.filter(course => isCourseSelected(course.id)).length;
+  const allFilteredSelected = filteredCourses.length > 0 && filteredCourses.every(course => isCourseSelected(course.id));
 
   return (
     <Box>
@@ -67,24 +119,17 @@ export const CourseSelectionDialog = ({
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
-                  checked={filteredCourses.length > 0 && filteredCourses.every(course => selectedCourseIds.includes(course.id))}
-                  indeterminate={
-                    filteredCourses.some(course => selectedCourseIds.includes(course.id)) &&
-                    !filteredCourses.every(course => selectedCourseIds.includes(course.id))
-                  }
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      onSelectionChange(Array.from(new Set([...selectedCourseIds, ...filteredCourses.map(c => c.id)])));
-                    } else {
-                      onSelectionChange(selectedCourseIds.filter(id => !filteredCourses.find(c => c.id === id)));
-                    }
-                  }}
+                  checked={allFilteredSelected}
+                  indeterminate={selectedFilteredCount > 0 && !allFilteredSelected}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
                 />
               </TableCell>
               <TableCell>Course</TableCell>
               <TableCell>Code</TableCell>
               <TableCell>Semester</TableCell>
               <TableCell>Credits</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Year</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -92,19 +137,39 @@ export const CourseSelectionDialog = ({
               <TableRow key={course.id}>
                 <TableCell padding="checkbox">
                   <Checkbox
-                    checked={selectedCourseIds.includes(course.id)}
-                    onChange={() => handleCourseSelection(course.id)}
+                    checked={isCourseSelected(course.id)}
+                    onChange={(e) => handleCourseSelection(course.id, e.target.checked)}
                   />
                 </TableCell>
                 <TableCell>{course.title}</TableCell>
                 <TableCell>{course.code}</TableCell>
                 <TableCell>{course.semester}</TableCell>
                 <TableCell>{course.credits}</TableCell>
+                <TableCell>{course.type || 'Mandatory'}</TableCell>
+                <TableCell>
+                  {isCourseSelected(course.id) ? (
+                    <FormControl size="small" sx={{ minWidth: 80 }}>
+                      <Select
+                        value={getSelectedYear(course.id)}
+                        onChange={(e) => handleYearChange(course.id, e.target.value as number)}
+                        displayEmpty
+                      >
+                        <MenuItem value={1}>Year 1</MenuItem>
+                        <MenuItem value={2}>Year 2</MenuItem>
+                        <MenuItem value={3}>Year 3</MenuItem>
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Typography variant="body2" color="textSecondary">
+                      -
+                    </Typography>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
             {filteredCourses.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={7} align="center">
                   <Typography color="textSecondary">
                     No courses found
                   </Typography>

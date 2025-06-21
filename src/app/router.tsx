@@ -18,6 +18,7 @@ import { UnauthorizedPage } from '../features/auth/pages/UnauthorizedPage';
 import { UserRole } from '../features/auth/core/_models';
 import { RoleManagementPage } from '../features/admin/pages/RoleManagementPage';
 import { UserProfile } from '../features/auth/pages/UserProfile';
+import { PingPage } from '../features/ping/pages/PingPage';
 
 export const router = createBrowserRouter([
   {
@@ -100,6 +101,16 @@ export const router = createBrowserRouter([
           <ProtectedRoute>
             <RoleGuard allowedRoles={[UserRole.Professor, UserRole.Administrator]}>
               <CreateCourse />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'ping',
+        element: (
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Administrator]}>
+              <PingPage />
             </RoleGuard>
           </ProtectedRoute>
         ),

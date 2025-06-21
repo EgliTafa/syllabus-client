@@ -12,90 +12,61 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Divider,
-  Grid
+  Grid,
+  Alert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { CreateSyllabusRequest, CreateCourseRequest } from '../core/_models';
+import { CreateSyllabusRequest, Course } from '../core/_models';
 import { AcademicYearSelect } from '../components/AcademicYearSelect';
+import { CourseSelectionForSyllabus } from '../components/CourseSelectionForSyllabus';
 
 export const CreateSyllabus = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
-  const [courses, setCourses] = useState<CreateCourseRequest[]>([]);
-  const [newCourse, setNewCourse] = useState<CreateCourseRequest>({
-    title: '',
-    code: '',
-    semester: 1,
-    credits: 0,
-    lectureHours: 0,
-    seminarHours: 0,
-    labHours: 0,
-    practiceHours: 0,
-    courseTypeLabel: 'B',
-    examMethod: 'P',
-  });
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleAddCourse = () => {
-    if (!newCourse.title || !newCourse.code) {
-      return;
-    }
-
-    // Validate numeric fields
-    if (
-      isNaN(newCourse.semester) ||
-      isNaN(newCourse.credits) ||
-      isNaN(newCourse.lectureHours) ||
-      isNaN(newCourse.seminarHours) ||
-      isNaN(newCourse.labHours) ||
-      isNaN(newCourse.practiceHours)
-    ) {
-      return;
-    }
-
-    // Ensure all numeric fields are positive
-    if (
-      newCourse.semester < 1 ||
-      newCourse.credits < 0 ||
-      newCourse.lectureHours < 0 ||
-      newCourse.seminarHours < 0 ||
-      newCourse.labHours < 0 ||
-      newCourse.practiceHours < 0
-    ) {
-      return;
-    }
-
-    setCourses([
-      ...courses,
-      { ...newCourse }
-    ]);
-
-    // Reset form
-    setNewCourse({
-      title: '',
-      code: '',
-      semester: 1,
-      credits: 0,
-      lectureHours: 0,
-      seminarHours: 0,
-      labHours: 0,
-      practiceHours: 0,
-      courseTypeLabel: 'B',
-      examMethod: 'P',
-    });
-  };
-
-  const handleRemoveCourse = (index: number) => {
-    const updatedCourses = courses.filter((_, i) => i !== index);
-    setCourses(updatedCourses);
+  const handleCoursesChange = (newCourses: Course[]) => {
+    setCourses(newCourses);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setValidationError(null);
     if (!name || !academicYear || courses.length === 0) return;
+
+    // Validation: Ensure only one Elective I and one Elective II per syllabus
+    const electiveICount = courses.filter(c => c.electiveGroup === 'Elective I').length;
+    const electiveIICount = courses.filter(c => c.electiveGroup === 'Elective II').length;
+    if (electiveICount > 1) {
+      setValidationError('Only one Elective I is allowed per syllabus.');
+      return;
+    }
+    if (electiveIICount > 1) {
+      setValidationError('Only one Elective II is allowed per syllabus.');
+      return;
+    }
+
+    // Validation: 60 credits per year
+    for (const year of [1, 2, 3]) {
+      const yearCourses = courses.filter(c => c.year === year);
+      const yearCredits = yearCourses.reduce((sum, course) => sum + course.credits, 0);
+      if (yearCredits !== 60) {
+        setValidationError(`Year ${year} must have exactly 60 credits (currently ${yearCredits}).`);
+        return;
+      }
+    }
+
+    // Optionally, validate total credits
+    const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+    if (totalCredits !== 180) {
+      setValidationError(`Total credits must be 180 (currently ${totalCredits}).`);
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -129,20 +100,43 @@ export const CreateSyllabus = () => {
     }
   };
 
+  // Calculate totals for display
+  const totals = courses.reduce((acc, course) => {
+    const year = course.year;
+    if (!acc[year]) {
+      acc[year] = { credits: 0, courses: 0 };
+    }
+    acc[year].credits += course.credits;
+    acc[year].courses += 1;
+    return acc;
+  }, {} as Record<number, { credits: number; courses: number }>);
+
+  const overall = {
+    credits: courses.reduce((sum, course) => sum + course.credits, 0),
+    courses: courses.length
+  };
+
   return (
-    <Box p={3}>
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate('/syllabus')}
-        sx={{ mb: 3 }}
       >
-        Back to List
+          Back to Syllabuses
       </Button>
+      </Box>
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Create New Syllabus
         </Typography>
+
+        {validationError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {validationError}
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'grid', gap: 3 }}>
@@ -169,130 +163,48 @@ export const CreateSyllabus = () => {
         </form>
 
         <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-          Add Courses
+          Course Management
         </Typography>
 
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            label="Course Title"
-            value={newCourse.title}
-            onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Course Code"
-            value={newCourse.code}
-            onChange={(e) => setNewCourse({ ...newCourse, code: e.target.value })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Semester"
-            type="number"
-            value={newCourse.semester}
-            onChange={(e) => setNewCourse({ ...newCourse, semester: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Credits"
-            type="number"
-            value={newCourse.credits}
-            onChange={(e) => setNewCourse({ ...newCourse, credits: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Lecture Hours"
-            type="number"
-            value={newCourse.lectureHours}
-            onChange={(e) => setNewCourse({ ...newCourse, lectureHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Seminar Hours"
-            type="number"
-            value={newCourse.seminarHours}
-            onChange={(e) => setNewCourse({ ...newCourse, seminarHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Lab Hours"
-            type="number"
-            value={newCourse.labHours}
-            onChange={(e) => setNewCourse({ ...newCourse, labHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            label="Practice Hours"
-            type="number"
-            value={newCourse.practiceHours}
-            onChange={(e) => setNewCourse({ ...newCourse, practiceHours: parseInt(e.target.value) })}
-            margin="normal"
-            fullWidth
-          />
-          <TextField
-            select
-            label="Course Type (Tipi)"
-            value={newCourse.courseTypeLabel}
-            onChange={(e) => setNewCourse({ ...newCourse, courseTypeLabel: e.target.value })}
-            margin="normal"
-            fullWidth
-            SelectProps={{ native: true }}
-          >
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="E">E</option>
-          </TextField>
-          <TextField
-            select
-            label="Exam Method (Mënyra e Vlerësimit)"
-            value={newCourse.examMethod}
-            onChange={(e) => setNewCourse({ ...newCourse, examMethod: e.target.value })}
-            margin="normal"
-            fullWidth
-            SelectProps={{ native: true }}
-          >
-            <option value="P">P</option>
-            <option value="V">V</option>
-            <option value="F">F</option>
-          </TextField>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddCourse}
-            sx={{ mt: 2 }}
-          >
-            Add Course
-          </Button>
-        </Box>
+        <CourseSelectionForSyllabus
+          selectedCourses={courses}
+          onCoursesChange={handleCoursesChange}
+        />
 
-        <List>
-          {courses.map((course, index) => (
-            <Box key={index}>
-              <ListItem>
-                <ListItemText
-                  primary={course.title}
-                  secondary={`Code: ${course.code} | Credits: ${course.credits} | Semester: ${course.semester}`}
-                />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => handleRemoveCourse(index)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-              {index < courses.length - 1 && <Divider />}
-            </Box>
-          ))}
-        </List>
+        {/* Summary Section */}
+        {courses.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Syllabus Summary
+            </Typography>
+            
+            <Grid container spacing={2}>
+              {[1, 2, 3].map(year => (
+                <Grid key={year} sx={{ width: { xs: '100%', sm: 'calc(33.33% - 16px)' } }}>
+                  <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="h6">Year {year}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {totals[year]?.courses || 0} courses
+                    </Typography>
+                    <Typography variant="h5" color="primary">
+                      {totals[year]?.credits || 0} credits
+        </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Paper sx={{ p: 2, mt: 2, textAlign: 'center', bgcolor: 'primary.main', color: 'white' }}>
+              <Typography variant="h6">Total</Typography>
+              <Typography variant="body2">
+                {overall.courses} courses
+              </Typography>
+              <Typography variant="h5">
+                {overall.credits} credits
+              </Typography>
+            </Paper>
+          </Box>
+        )}
       </Paper>
     </Box>
   );

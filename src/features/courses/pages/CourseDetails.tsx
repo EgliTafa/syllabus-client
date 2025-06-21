@@ -341,6 +341,52 @@ export const CourseDetails = () => {
         </Grid>
       </Paper>
 
+      {/* Legend Section */}
+      <Paper sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Legend
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Course Types:
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • A - Kurse të detyrueshme (Mandatory courses)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • B - Kurse të detyrueshme (Basic courses)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • C - Me Zgjedhje (Elective courses)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • D - Disiplinë e përgjithshme (General discipline)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • E - Provim Diplome (Final exam/project)
+            </Typography>
+          </Grid>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Evaluation Methods:
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • P - Provim (Exam)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • V - Vlerësim (Assessment/Observation)
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • F - Frekuentim (Attendance)
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              • Provim Diplome - Final project defense
+            </Typography>
+          </Grid>
+        </Grid>
+      </Paper>
+
       <Dialog open={editOpen} onClose={closeEditModal} maxWidth="md" fullWidth>
         <DialogTitle>Edit Course</DialogTitle>
         <form onSubmit={handleEditSubmit}>

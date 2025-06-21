@@ -14,6 +14,7 @@ import {
 } from "../core/_models";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
+import { isTokenExpired } from "../../../utils/jwtUtils";
 
 interface AuthState {
   user: {
@@ -41,6 +42,22 @@ export const useAuth = () => {
   const clearError = useCallback(() => {
     dispatch(setError(null));
   }, [dispatch]);
+
+  const handleLogout = useCallback(() => {
+    dispatch(logout());
+    localStorage.removeItem("token");
+    navigate("/login");
+  }, [dispatch, navigate]);
+
+  // Check if current token is valid
+  const checkTokenValidity = useCallback(() => {
+    if (user?.token && isTokenExpired(user.token)) {
+      console.log('Token is expired, logging out user');
+      handleLogout();
+      return false;
+    }
+    return true;
+  }, [user?.token, handleLogout]);
 
   const handleRegister = async (data: RegisterUserRequest) => {
     try {
@@ -132,13 +149,12 @@ export const useAuth = () => {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
   const handleUpdateProfile = async (data: UpdateProfileRequest) => {
+    // Check token validity before making the request
+    if (!checkTokenValidity()) {
+      return;
+    }
+
     try {
       clearError();
       dispatch(setIsFetching(true));
@@ -160,6 +176,7 @@ export const useAuth = () => {
             break;
           case 401:
             errorMessage = "Your session has expired. Please log in again.";
+            handleLogout();
             break;
           case 500:
             errorMessage = "Server error. Please try again later.";
@@ -184,6 +201,11 @@ export const useAuth = () => {
   const handleChangePassword = async (
     data: ChangePasswordRequest
   ): Promise<ChangePasswordResponse> => {
+    // Check token validity before making the request
+    if (!checkTokenValidity()) {
+      throw new Error('Token expired');
+    }
+
     try {
       clearError();
       dispatch(setIsFetching(true));
@@ -314,5 +336,6 @@ export const useAuth = () => {
     isAdmin,
     isProfessor,
     isStudent,
+    checkTokenValidity,
   };
 };

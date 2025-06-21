@@ -1,13 +1,10 @@
-export interface Topic {
-  title: string;
-  hours: number;
-  reference?: string;
-}
+import { TeachingPlan, EvaluationBreakdown, Topic } from '../../courses/core/_models';
 
 export interface Course {
     id: number;
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
   lectureHours: number;
@@ -21,14 +18,15 @@ export interface Course {
   language?: string;
   ethicsCode?: string;
   teachingFormat?: string;
-  teachingPlan?: any; // TODO: Define proper type
-  evaluationBreakdown?: any; // TODO: Define proper type
+  teachingPlan?: TeachingPlan;
+  evaluationBreakdown?: EvaluationBreakdown;
   objective?: string;
   keyConcepts?: string;
   prerequisites?: string;
   skillsAcquired?: string;
   courseResponsible?: string;
   topics?: Topic[];
+  electiveGroup?: string | null; // 'Elective I', 'Elective II', or null
 }
 
 export interface Syllabus {
@@ -47,6 +45,7 @@ export interface CreateSyllabusRequest {
 export interface CreateCourseRequest {
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
   lectureHours: number;
@@ -55,6 +54,7 @@ export interface CreateCourseRequest {
   practiceHours: number;
   courseTypeLabel?: string;
   examMethod?: string;
+  electiveGroup?: string | null; // 'Elective I', 'Elective II', or null
 }
   
 export interface UpdateSyllabusRequest {

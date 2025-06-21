@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { CountryPrefixDropdown } from '../../../components';
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -65,8 +66,6 @@ export const Register = () => {
     
     if (!formData.phonePrefix.trim()) {
       errors.phonePrefix = 'Phone prefix is required';
-    } else if (!/^\+[0-9]{1,4}$/.test(formData.phonePrefix)) {
-      errors.phonePrefix = 'Please enter a valid prefix (e.g., +355)';
     }
     
     if (!formData.phoneNumber.trim()) {
@@ -102,6 +101,20 @@ export const Register = () => {
       setValidationErrors(prev => ({
         ...prev,
         [name]: ''
+      }));
+    }
+  };
+
+  const handlePrefixChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      phonePrefix: value
+    }));
+    // Clear validation error when user selects
+    if (validationErrors.phonePrefix) {
+      setValidationErrors(prev => ({
+        ...prev,
+        phonePrefix: ''
       }));
     }
   };
@@ -194,16 +207,12 @@ export const Register = () => {
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
               disabled={localLoading}
             />
-            <TextField
-              fullWidth
-              label="Phone Prefix"
-              name="phonePrefix"
+            <CountryPrefixDropdown
               value={formData.phonePrefix}
-              onChange={handleChange}
+              onChange={handlePrefixChange}
               error={!!validationErrors.phonePrefix}
               helperText={validationErrors.phonePrefix}
               required
-              placeholder="+355"
               disabled={localLoading}
             />
             <TextField
