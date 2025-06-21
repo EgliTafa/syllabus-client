@@ -26,6 +26,7 @@ import {
   Chip,
   CircularProgress,
   Tooltip,
+  Avatar,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -35,8 +36,9 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 import { adminApi, UpdateUserRequest } from '../api/adminApi';
-import { CountryPrefixDropdown } from '../../../components/CountryPrefixDropdown';
+import { CountryPrefixDropdown, ProfilePictureUpload } from '../../../components';
 import { decodeToken } from '../../../utils/jwtUtils';
+import { authApi } from '../../auth/api/authApi';
 
 interface User {
   id: string;
@@ -49,6 +51,7 @@ interface User {
   lockoutEnd: string | null;
   status: string;
   roles: string[];
+  profilePictureUrl?: string;
 }
 
 interface CreateUserForm {
@@ -225,7 +228,7 @@ export const UserManagementPage: React.FC = () => {
       phonePrefix: phonePrefix,
       phoneNumber: phoneNumber,
       role: user.roles[0] || 'Student',
-      profilePictureUrl: '',
+      profilePictureUrl: user.profilePictureUrl || '',
     });
     setEditDialogOpen(true);
   };
@@ -297,6 +300,79 @@ export const UserManagementPage: React.FC = () => {
     (user) => user.id !== currentUserId && user.email !== currentUserEmail
   );
 
+  const handleProfilePictureUpload = async (file: File): Promise<string> => {
+    try {
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64Data = result.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+      });
+
+      const response = await authApi.uploadProfilePicture(base64, file.name, file.type);
+      return response.profilePictureUrl;
+    } catch (error: any) {
+      let errorMessage = "Profile picture upload failed";
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = error.response.data?.message || "Invalid file format or size.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage =
+              error.response.data?.message || "Profile picture upload failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "No response from server. Please check your internet connection.";
+      }
+
+      throw new Error(errorMessage);
+    }
+  };
+
+  const handleCreateProfilePictureUpload = async (file: File): Promise<string> => {
+    const imageUrl = await handleProfilePictureUpload(file);
+    setCreateUserForm(prev => ({
+      ...prev,
+      profilePictureUrl: imageUrl
+    }));
+    return imageUrl;
+  };
+
+  const handleEditProfilePictureUpload = async (file: File): Promise<string> => {
+    const imageUrl = await handleProfilePictureUpload(file);
+    setEditUserForm(prev => ({
+      ...prev,
+      profilePictureUrl: imageUrl
+    }));
+    return imageUrl;
+  };
+
+  const handleCreateProfilePictureRemove = () => {
+    setCreateUserForm(prev => ({
+      ...prev,
+      profilePictureUrl: ''
+    }));
+  };
+
+  const handleEditProfilePictureRemove = () => {
+    setEditUserForm(prev => ({
+      ...prev,
+      profilePictureUrl: ''
+    }));
+  };
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -322,6 +398,7 @@ export const UserManagementPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>{t('userManagement.profilePicture')}</TableCell>
                 <TableCell>{t('userManagement.name')}</TableCell>
                 <TableCell>{t('userManagement.email')}</TableCell>
                 <TableCell>{t('userManagement.phoneNumber')}</TableCell>
@@ -334,6 +411,15 @@ export const UserManagementPage: React.FC = () => {
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell>
+                    <Avatar
+                      src={user.profilePictureUrl || undefined}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      sx={{ width: 40, height: 40 }}
+                    >
+                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                    </Avatar>
+                  </TableCell>
                   <TableCell>
                     {user.firstName} {user.lastName}
                   </TableCell>
@@ -476,10 +562,13 @@ export const UserManagementPage: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              label={t('userManagement.profilePictureUrl')}
-              value={createUserForm.profilePictureUrl || ''}
-              onChange={(e) => setCreateUserForm({ ...createUserForm, profilePictureUrl: e.target.value })}
+            <ProfilePictureUpload
+              currentImageUrl={createUserForm.profilePictureUrl || undefined}
+              onImageUpload={handleCreateProfilePictureUpload}
+              onImageRemove={handleCreateProfilePictureRemove}
+              disabled={false}
+              size="medium"
+              showPreview={false}
             />
           </Box>
         </DialogContent>
@@ -549,10 +638,13 @@ export const UserManagementPage: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              label={t('userManagement.profilePictureUrl')}
-              value={editUserForm.profilePictureUrl || ''}
-              onChange={(e) => setEditUserForm({ ...editUserForm, profilePictureUrl: e.target.value })}
+            <ProfilePictureUpload
+              currentImageUrl={editUserForm.profilePictureUrl || undefined}
+              onImageUpload={handleEditProfilePictureUpload}
+              onImageRemove={handleEditProfilePictureRemove}
+              disabled={false}
+              size="medium"
+              showPreview={false}
             />
           </Box>
         </DialogContent>

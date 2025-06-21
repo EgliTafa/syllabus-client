@@ -139,4 +139,16 @@ export const authApi = {
     });
     return response.data;
   },
+
+  /**
+   * Upload profile picture
+   */
+  uploadProfilePicture: async (file: string, fileName: string, contentType: string): Promise<{ profilePictureUrl: string; message: string }> => {
+    const response = await api.post<{ profilePictureUrl: string; message: string }>('/upload-profile-picture', {
+      file,
+      fileName,
+      contentType,
+    });
+    return response.data;
+  },
 }; 

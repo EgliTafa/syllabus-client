@@ -81,6 +81,7 @@ export interface User {
   lockoutEnd: string | null;
   status: string;
   roles: string[];
+  profilePictureUrl?: string;
 }
 
 export interface RevokeAccessRequest {

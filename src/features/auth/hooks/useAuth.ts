@@ -26,6 +26,8 @@ interface AuthState {
     phonePrefix?: string;
     phoneNumber?: string;
     roles?: UserRole[];
+    profilePictureUrl?: string;
+    emailConfirmed: boolean;
   } | null;
   isAuthenticated: boolean;
   isFetching: boolean;
@@ -281,12 +283,96 @@ export const useAuth = () => {
 
   const handleResetPassword = async (data: ResetPasswordRequest) => {
     try {
+      clearError();
       dispatch(setIsFetching(true));
-      await authApi.resetPassword(data);
+      const response = await authApi.resetPassword(data);
+      return response;
     } catch (error: any) {
-      dispatch(
-        setError(error.response?.data?.message || "Failed to reset password")
-      );
+      let errorMessage = "Password reset failed";
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = "Please check your input. All fields are required.";
+            break;
+          case 401:
+            errorMessage = "Invalid or expired reset token.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage =
+              error.response.data?.message || "Password reset failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "No response from server. Please check your internet connection.";
+      }
+
+      dispatch(setError(errorMessage));
+      throw error;
+    } finally {
+      dispatch(setIsFetching(false));
+    }
+  };
+
+  const handleUploadProfilePicture = async (file: File): Promise<string> => {
+    try {
+      clearError();
+      dispatch(setIsFetching(true));
+
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64Data = result.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+      });
+
+      const response = await authApi.uploadProfilePicture(base64, file.name, file.type);
+      
+      // Update user's profile picture URL in the store
+      if (user) {
+        dispatch(setUser({
+          ...user,
+          profilePictureUrl: response.profilePictureUrl,
+          emailConfirmed: user.emailConfirmed,
+          roles: user.roles || []
+        }));
+      }
+
+      return response.profilePictureUrl;
+    } catch (error: any) {
+      let errorMessage = "Profile picture upload failed";
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = error.response.data?.message || "Invalid file format or size.";
+            break;
+          case 401:
+            errorMessage = "Your session has expired. Please log in again.";
+            handleLogout();
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage =
+              error.response.data?.message || "Profile picture upload failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "No response from server. Please check your internet connection.";
+      }
+
+      dispatch(setError(errorMessage));
       throw error;
     } finally {
       dispatch(setIsFetching(false));
@@ -330,6 +416,7 @@ export const useAuth = () => {
     handleChangePassword,
     handleForgotPassword,
     handleResetPassword,
+    handleUploadProfilePicture,
     hasRole,
     hasAnyRole,
     hasAllRoles,

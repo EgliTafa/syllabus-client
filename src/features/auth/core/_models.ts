@@ -11,6 +11,7 @@ export interface RegisterUserRequest {
   password: string;
   phonePrefix: string;
   phoneNumber: string;
+  profilePictureUrl?: string;
 }
 
 export interface RegisterUserResponse {
@@ -94,4 +95,5 @@ export interface User {
   token: string;
   roles: UserRole[];
   emailConfirmed: boolean;
+  profilePictureUrl?: string;
 } 
