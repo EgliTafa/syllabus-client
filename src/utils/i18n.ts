@@ -28,7 +28,7 @@ const resources = {
       nav: {
         syllabuses: 'Syllabuses',
         syllabusHistory: 'Syllabus History',
-        adminRole: 'Admin Role Assignment',
+        adminManagement: 'Admin Management',
         courses: 'Courses',
         apiHealth: 'API Health',
         apiHealthCheck: 'API Health Check',
@@ -231,7 +231,7 @@ const resources = {
       nav: {
         syllabuses: 'Syllabuset',
         syllabusHistory: 'Historia e Syllabuseve',
-        adminRole: 'Caktimi i Roleve të Adminit',
+        adminManagement: 'Menaxhimi i Adminit',
         courses: 'Lëndët',
         apiHealth: 'Shëndeti i API-së',
         apiHealthCheck: 'Kontrolli i Shëndetit të API-së',

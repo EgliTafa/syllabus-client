@@ -115,8 +115,8 @@ export const MainLayout = () => {
                 </ListItem>
               ))}
               {isAdmin() && (
-                <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
-                  <ListItemText primary={t('nav.adminRole')} />
+                <ListItem component={RouterLink} to="/admin" onClick={handleMobileMenuToggle}>
+                  <ListItemText primary={t('nav.adminManagement')} />
                 </ListItem>
               )}
               <ListItem component={RouterLink} to="/courses" onClick={handleMobileMenuToggle}>
@@ -180,9 +180,9 @@ export const MainLayout = () => {
                     <Button
                       color="inherit"
                       component={RouterLink}
-                      to="/admin/roles"
+                      to="/admin"
                     >
-                      {t('nav.adminRole')}
+                      {t('nav.adminManagement')}
                     </Button>
                   )}
                   <Button color="inherit" component={RouterLink} to="/courses">

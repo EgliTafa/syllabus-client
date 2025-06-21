@@ -16,7 +16,7 @@ import { ResetPassword } from '../features/auth/pages/ResetPassword';
 import { RoleGuard } from '../features/auth/components/RoleGuard';
 import { UnauthorizedPage } from '../features/auth/pages/UnauthorizedPage';
 import { UserRole } from '../features/auth/core/_models';
-import { RoleManagementPage } from '../features/admin/pages/RoleManagementPage';
+import { AdminManagementPage } from '../features/admin/pages/AdminManagementPage';
 import { UserProfile } from '../features/auth/pages/UserProfile';
 import { PingPage } from '../features/ping/pages/PingPage';
 
@@ -144,11 +144,11 @@ export const router = createBrowserRouter([
         element: <UnauthorizedPage />,
       },
       {
-        path: 'admin/roles',
+        path: 'admin',
         element: (
           <ProtectedRoute>
             <RoleGuard allowedRoles={[UserRole.Administrator]}>
-              <RoleManagementPage />
+              <AdminManagementPage />
             </RoleGuard>
           </ProtectedRoute>
         ),
