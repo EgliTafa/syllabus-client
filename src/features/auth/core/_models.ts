@@ -20,6 +20,7 @@ export interface RegisterUserResponse {
   email: string;
   token: string;
   roles?: UserRole[];
+  emailConfirmed: boolean;
 }
 
 export interface LoginRequest {
@@ -71,6 +72,7 @@ export interface UpdateProfileResponse {
   phonePrefix: string;
   phoneNumber: string;
   profilePictureUrl?: string;
+  emailConfirmed: boolean;
 }
 
 export interface ChangePasswordRequest {
