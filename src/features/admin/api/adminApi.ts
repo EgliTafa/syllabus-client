@@ -148,4 +148,16 @@ export const adminApi = {
   deleteUser: async (userId: string): Promise<void> => {
     await api.delete(`/users/${userId}`);
   },
+
+  /**
+   * Upload profile picture for a specific user (admin only)
+   */
+  uploadUserProfilePicture: async (userId: string, file: string, fileName: string, contentType: string): Promise<{ profilePictureUrl: string; message: string }> => {
+    const response = await api.post<{ profilePictureUrl: string; message: string }>(`/users/${userId}/upload-profile-picture`, {
+      file,
+      fileName,
+      contentType,
+    });
+    return response.data;
+  },
 }; 

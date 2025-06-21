@@ -300,7 +300,7 @@ export const UserManagementPage: React.FC = () => {
     (user) => user.id !== currentUserId && user.email !== currentUserEmail
   );
 
-  const handleProfilePictureUpload = async (file: File): Promise<string> => {
+  const handleProfilePictureUpload = async (file: File, userId?: string): Promise<string> => {
     try {
       // Convert file to base64
       const base64 = await new Promise<string>((resolve, reject) => {
@@ -315,8 +315,15 @@ export const UserManagementPage: React.FC = () => {
         reader.onerror = reject;
       });
 
-      const response = await authApi.uploadProfilePicture(base64, file.name, file.type);
-      return response.profilePictureUrl;
+      // If userId is provided, use admin API to upload for that specific user
+      // Otherwise, use auth API for current user (create user scenario)
+      if (userId) {
+        const response = await adminApi.uploadUserProfilePicture(userId, base64, file.name, file.type);
+        return response.profilePictureUrl;
+      } else {
+        const response = await authApi.uploadProfilePicture(base64, file.name, file.type);
+        return response.profilePictureUrl;
+      }
     } catch (error: any) {
       let errorMessage = "Profile picture upload failed";
 
@@ -351,7 +358,7 @@ export const UserManagementPage: React.FC = () => {
   };
 
   const handleEditProfilePictureUpload = async (file: File): Promise<string> => {
-    const imageUrl = await handleProfilePictureUpload(file);
+    const imageUrl = await handleProfilePictureUpload(file, editingUserId);
     setEditUserForm(prev => ({
       ...prev,
       profilePictureUrl: imageUrl
