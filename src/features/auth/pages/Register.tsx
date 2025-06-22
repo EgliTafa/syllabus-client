@@ -16,7 +16,8 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { CountryPrefixDropdown } from '../../../components';
+import { CountryPrefixDropdown, ProfilePictureUpload } from '../../../components';
+import { authApi } from '../api/authApi';
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -28,7 +29,8 @@ export const Register = () => {
     password: '',
     confirmPassword: '',
     phonePrefix: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    profilePictureUrl: ''
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -119,6 +121,61 @@ export const Register = () => {
     }
   };
 
+  const handleProfilePictureUpload = async (file: File): Promise<string> => {
+    try {
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64Data = result.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+      });
+
+      const response = await authApi.uploadProfilePicture(base64, file.name, file.type);
+      
+      // Update form data with the profile picture URL
+      setFormData(prev => ({
+        ...prev,
+        profilePictureUrl: response.profilePictureUrl
+      }));
+
+      return response.profilePictureUrl;
+    } catch (error: any) {
+      let errorMessage = "Profile picture upload failed";
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = error.response.data?.message || "Invalid file format or size.";
+            break;
+          case 500:
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage =
+              error.response.data?.message || "Profile picture upload failed. Please try again.";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "No response from server. Please check your internet connection.";
+      }
+
+      throw new Error(errorMessage);
+    }
+  };
+
+  const handleProfilePictureRemove = () => {
+    setFormData(prev => ({
+      ...prev,
+      profilePictureUrl: ''
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -134,7 +191,8 @@ export const Register = () => {
         email: formData.email,
         password: formData.password,
         phonePrefix: formData.phonePrefix,
-        phoneNumber: formData.phoneNumber
+        phoneNumber: formData.phoneNumber,
+        profilePictureUrl: formData.profilePictureUrl || undefined
       });
     } catch (error) {
       // Error is handled by the auth hook
@@ -157,7 +215,7 @@ export const Register = () => {
         sx={{
           p: 4,
           width: '100%',
-          maxWidth: 600
+          maxWidth: 700
         }}
       >
         <Typography variant="h4" component="h1" gutterBottom align="center">
@@ -171,115 +229,136 @@ export const Register = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-            <TextField
-              fullWidth
-              label="First Name"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              error={!!validationErrors.firstName}
-              helperText={validationErrors.firstName}
-              required
-              disabled={localLoading}
-            />
-            <TextField
-              fullWidth
-              label="Last Name"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              error={!!validationErrors.lastName}
-              helperText={validationErrors.lastName}
-              required
-              disabled={localLoading}
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={!!validationErrors.email}
-              helperText={validationErrors.email}
-              required
-              sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              disabled={localLoading}
-            />
-            <CountryPrefixDropdown
-              value={formData.phonePrefix}
-              onChange={handlePrefixChange}
-              error={!!validationErrors.phonePrefix}
-              helperText={validationErrors.phonePrefix}
-              required
-              disabled={localLoading}
-            />
-            <TextField
-              fullWidth
-              label="Phone Number"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              error={!!validationErrors.phoneNumber}
-              helperText={validationErrors.phoneNumber}
-              required
-              placeholder="1234567890"
-              disabled={localLoading}
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleChange}
-              error={!!validationErrors.password}
-              helperText={validationErrors.password}
-              required
-              sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              disabled={localLoading}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      disabled={localLoading}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              name="confirmPassword"
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={!!validationErrors.confirmPassword}
-              helperText={validationErrors.confirmPassword}
-              required
-              sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
-              disabled={localLoading}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                      disabled={localLoading}
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
+            {/* Left column - Profile picture */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <ProfilePictureUpload
+                currentImageUrl={formData.profilePictureUrl || undefined}
+                onImageUpload={handleProfilePictureUpload}
+                onImageRemove={handleProfilePictureRemove}
+                disabled={localLoading}
+                size="large"
+                showPreview={false}
+              />
+            </Box>
+
+            {/* Right column - Form fields */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="First Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  error={!!validationErrors.firstName}
+                  helperText={validationErrors.firstName}
+                  required
+                  disabled={localLoading}
+                />
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  error={!!validationErrors.lastName}
+                  helperText={validationErrors.lastName}
+                  required
+                  disabled={localLoading}
+                />
+              </Box>
+              
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                error={!!validationErrors.email}
+                helperText={validationErrors.email}
+                required
+                disabled={localLoading}
+              />
+              
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                <CountryPrefixDropdown
+                  value={formData.phonePrefix}
+                  onChange={handlePrefixChange}
+                  error={!!validationErrors.phonePrefix}
+                  helperText={validationErrors.phonePrefix}
+                  required
+                  disabled={localLoading}
+                />
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  error={!!validationErrors.phoneNumber}
+                  helperText={validationErrors.phoneNumber}
+                  required
+                  placeholder="1234567890"
+                  disabled={localLoading}
+                />
+              </Box>
+              
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                error={!!validationErrors.password}
+                helperText={validationErrors.password}
+                required
+                disabled={localLoading}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        disabled={localLoading}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              
+              <TextField
+                fullWidth
+                label="Confirm Password"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                error={!!validationErrors.confirmPassword}
+                helperText={validationErrors.confirmPassword}
+                required
+                disabled={localLoading}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        edge="end"
+                        disabled={localLoading}
+                      >
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
           </Box>
+          
           <Button
             type="submit"
             fullWidth

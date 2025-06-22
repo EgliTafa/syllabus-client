@@ -16,6 +16,7 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  Avatar,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -30,11 +31,13 @@ import { useDispatch } from "react-redux";
 import { SyllabusHistoryDropdown } from "../../features/syllabus/components/SyllabusHistoryDropdown";
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '../../components/LanguageToggle';
+import { EmailConfirmationReminder } from '../../components/EmailConfirmationReminder';
+import { LockoutReminder } from '../../components/LockoutReminder';
 
 export const MainLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const { handleLogout, isAdmin } = useAuth();
   const { checkTokenValidity } = useTokenValidation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -94,6 +97,31 @@ export const MainLayout = () => {
       onClose={handleMobileMenuToggle}
     >
       <Box sx={{ width: 250 }}>
+        {isAuthenticated && user && (
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+              {user.profilePictureUrl ? (
+                <Avatar 
+                  alt={`${user.firstName} ${user.lastName}`} 
+                  src={user.profilePictureUrl}
+                  sx={{ width: 48, height: 48 }}
+                />
+              ) : (
+                <Avatar sx={{ width: 48, height: 48 }}>
+                  <AccountCircleIcon />
+                </Avatar>
+              )}
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {user.firstName} {user.lastName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {user.email}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        )}
         <List>
           {isAuthenticated ? (
             <>
@@ -115,8 +143,8 @@ export const MainLayout = () => {
                 </ListItem>
               ))}
               {isAdmin() && (
-                <ListItem component={RouterLink} to="/admin/roles" onClick={handleMobileMenuToggle}>
-                  <ListItemText primary={t('nav.adminRole')} />
+                <ListItem component={RouterLink} to="/admin" onClick={handleMobileMenuToggle}>
+                  <ListItemText primary={t('nav.adminManagement')} />
                 </ListItem>
               )}
               <ListItem component={RouterLink} to="/courses" onClick={handleMobileMenuToggle}>
@@ -180,9 +208,9 @@ export const MainLayout = () => {
                     <Button
                       color="inherit"
                       component={RouterLink}
-                      to="/admin/roles"
+                      to="/admin"
                     >
-                      {t('nav.adminRole')}
+                      {t('nav.adminManagement')}
                     </Button>
                   )}
                   <Button color="inherit" component={RouterLink} to="/courses">
@@ -216,7 +244,15 @@ export const MainLayout = () => {
                   onClick={handleMenu}
                   color="inherit"
                 >
-                  <AccountCircleIcon />
+                  {user?.profilePictureUrl ? (
+                    <Avatar 
+                      alt={`${user.firstName} ${user.lastName}`} 
+                      src={user.profilePictureUrl}
+                      sx={{ width: 32, height: 32 }}
+                    />
+                  ) : (
+                    <AccountCircleIcon />
+                  )}
                 </IconButton>
               )}
               <Menu
@@ -234,6 +270,31 @@ export const MainLayout = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
+                {user && (
+                  <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', minWidth: 200 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                      {user.profilePictureUrl ? (
+                        <Avatar 
+                          alt={`${user.firstName} ${user.lastName}`} 
+                          src={user.profilePictureUrl}
+                          sx={{ width: 40, height: 40 }}
+                        />
+                      ) : (
+                        <Avatar sx={{ width: 40, height: 40 }}>
+                          <AccountCircleIcon />
+                        </Avatar>
+                      )}
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          {user.firstName} {user.lastName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {user.email}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
                 <Box display="flex" justifyContent="center" alignItems="center" py={1}>
                   <LanguageToggle />
                 </Box>
@@ -272,6 +333,8 @@ export const MainLayout = () => {
         </Toolbar>
       </AppBar>
       {renderMobileMenu()}
+      <EmailConfirmationReminder />
+      <LockoutReminder />
       <Container component="main" sx={{ flexGrow: 1, py: 3 }}>
         <Outlet />
       </Container>

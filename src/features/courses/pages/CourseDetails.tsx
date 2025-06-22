@@ -23,6 +23,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { exportCoursePdf, deleteCourse } from '../core/_requests';
 import { useTranslation } from 'react-i18next';
+import { useLockoutStatus } from '../../../hooks/useLockoutStatus';
 
 export const CourseDetails = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -38,6 +39,7 @@ export const CourseDetails = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { t } = useTranslation();
+  const { isLockedOut } = useLockoutStatus();
 
   useEffect(() => {
     if (courseId) {
@@ -222,7 +224,9 @@ export const CourseDetails = () => {
           <Button
             variant="contained"
             color="primary"
+            startIcon={<EditIcon />}
             onClick={openEditModal}
+            disabled={isLockedOut}
             size="medium"
             sx={{ 
               minWidth: 'auto',
@@ -234,8 +238,9 @@ export const CourseDetails = () => {
           <Button
             variant="contained"
             color="error"
-            onClick={handleDeleteClick}
             startIcon={<DeleteIcon />}
+            onClick={handleDeleteClick}
+            disabled={isLockedOut}
             size="medium"
             sx={{ 
               minWidth: 'auto',

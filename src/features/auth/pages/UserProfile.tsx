@@ -19,12 +19,14 @@ import { useAuth } from '../hooks/useAuth';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useTheme } from '@mui/material/styles';
-import { CountryPrefixDropdown } from '../../../components';
+import { CountryPrefixDropdown, ProfilePictureUpload } from '../../../components';
+import { useLockoutStatus } from '../../../hooks/useLockoutStatus';
 
 export const UserProfile = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { user, handleUpdateProfile, handleChangePassword, isFetching, error, clearError } = useAuth();
+  const { user, handleUpdateProfile, handleChangePassword, handleUploadProfilePicture, isFetching, error, clearError } = useAuth();
+  const { isLockedOut } = useLockoutStatus();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -44,7 +46,8 @@ export const UserProfile = () => {
     lastName: user?.lastName || '',
     email: user?.email || '',
     phonePrefix: user?.phonePrefix || '',
-    phoneNumber: user?.phoneNumber || ''
+    phoneNumber: user?.phoneNumber || '',
+    profilePictureUrl: user?.profilePictureUrl || ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -104,6 +107,40 @@ export const UserProfile = () => {
         [name]: ''
       }));
     }
+  };
+
+  const handleProfilePictureUpload = async (file: File): Promise<string> => {
+    try {
+      const imageUrl = await handleUploadProfilePicture(file);
+      
+      // Update profile data with the new image URL
+      setProfileData(prev => ({
+        ...prev,
+        profilePictureUrl: imageUrl
+      }));
+
+      setUpdateStatus({
+        type: 'success',
+        message: 'Profile picture updated successfully!',
+        show: true
+      });
+
+      return imageUrl;
+    } catch (error: any) {
+      setUpdateStatus({
+        type: 'error',
+        message: error.message || 'Failed to upload profile picture. Please try again.',
+        show: true
+      });
+      throw error;
+    }
+  };
+
+  const handleProfilePictureRemove = () => {
+    setProfileData(prev => ({
+      ...prev,
+      profilePictureUrl: ''
+    }));
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -172,7 +209,7 @@ export const UserProfile = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
+    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 2 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         User Profile
       </Typography>
@@ -183,16 +220,33 @@ export const UserProfile = () => {
         </Alert>
       )}
 
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={4}>
-          {/* Profile Information Section */}
-          <Grid sx={{ width: '100%' }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+        {/* Profile Picture Section */}
+        <Box sx={{ width: { xs: '100%', md: '300px' }, flexShrink: 0 }}>
+          <Paper elevation={3} sx={{ p: 3, height: 'fit-content' }}>
+            <Typography variant="h6" gutterBottom>
+              Profile Picture
+            </Typography>
+            <ProfilePictureUpload
+              currentImageUrl={profileData.profilePictureUrl || undefined}
+              onImageUpload={handleProfilePictureUpload}
+              onImageRemove={handleProfilePictureRemove}
+              disabled={isFetching || isLockedOut}
+              size="large"
+              showPreview={false}
+            />
+          </Paper>
+        </Box>
+
+        {/* Profile Information Section */}
+        <Box sx={{ flex: 1 }}>
+          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               Profile Information
             </Typography>
             <form onSubmit={handleProfileSubmit}>
-              <Grid container spacing={2}>
-                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                   <TextField
                     fullWidth
                     label="First Name"
@@ -200,10 +254,8 @@ export const UserProfile = () => {
                     value={profileData.firstName}
                     onChange={handleProfileChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
-                </Grid>
-                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                   <TextField
                     fullWidth
                     label="Last Name"
@@ -211,30 +263,28 @@ export const UserProfile = () => {
                     value={profileData.lastName}
                     onChange={handleProfileChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
-                </Grid>
-                <Grid sx={{ width: '100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    name="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={handleProfileChange}
-                    required
-                    disabled={isFetching}
-                  />
-                </Grid>
-                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+                </Box>
+                
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={profileData.email}
+                  onChange={handleProfileChange}
+                  required
+                  disabled={isFetching || isLockedOut}
+                />
+                
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                   <CountryPrefixDropdown
                     value={profileData.phonePrefix}
                     onChange={handlePrefixChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
-                </Grid>
-                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                   <TextField
                     fullWidth
                     label="Phone Number"
@@ -242,62 +292,55 @@ export const UserProfile = () => {
                     value={profileData.phoneNumber}
                     onChange={handleProfileChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
-                </Grid>
-                <Grid sx={{ width: '100%' }}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={isFetching}
-                    sx={{ mt: 2 }}
-                  >
-                    {isFetching ? <CircularProgress size={24} /> : 'Update Profile'}
-                  </Button>
-                </Grid>
-              </Grid>
+                </Box>
+                
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isFetching || isLockedOut}
+                  sx={{ mt: 2, alignSelf: 'flex-start' }}
+                >
+                  {isFetching ? <CircularProgress size={24} /> : 'Update Profile'}
+                </Button>
+              </Box>
             </form>
-          </Grid>
-
-          <Grid sx={{ width: '100%' }}>
-            <Divider sx={{ my: 2 }} />
-          </Grid>
+          </Paper>
 
           {/* Change Password Section */}
-          <Grid sx={{ width: '100%' }}>
+          <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Change Password
             </Typography>
             <form onSubmit={handlePasswordSubmit}>
-              <Grid container spacing={2}>
-                <Grid sx={{ width: '100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Current Password"
-                    name="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    error={!!validationErrors.currentPassword}
-                    helperText={validationErrors.currentPassword}
-                    required
-                    disabled={isFetching}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            edge="end"
-                            disabled={isFetching}
-                          >
-                            {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Current Password"
+                  name="currentPassword"
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  error={!!validationErrors.currentPassword}
+                  helperText={validationErrors.currentPassword}
+                  required
+                  disabled={isFetching || isLockedOut}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          edge="end"
+                          disabled={isFetching || isLockedOut}
+                        >
+                          {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                   <TextField
                     fullWidth
                     label="New Password"
@@ -308,14 +351,14 @@ export const UserProfile = () => {
                     error={!!validationErrors.newPassword}
                     helperText={validationErrors.newPassword}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() => setShowNewPassword(!showNewPassword)}
                             edge="end"
-                            disabled={isFetching}
+                            disabled={isFetching || isLockedOut}
                           >
                             {showNewPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -323,8 +366,6 @@ export const UserProfile = () => {
                       ),
                     }}
                   />
-                </Grid>
-                <Grid sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                   <TextField
                     fullWidth
                     label="Confirm New Password"
@@ -335,14 +376,14 @@ export const UserProfile = () => {
                     error={!!validationErrors.confirmPassword}
                     helperText={validationErrors.confirmPassword}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             edge="end"
-                            disabled={isFetching}
+                            disabled={isFetching || isLockedOut}
                           >
                             {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -350,22 +391,20 @@ export const UserProfile = () => {
                       ),
                     }}
                   />
-                </Grid>
-                <Grid sx={{ width: '100%' }}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={isFetching}
-                    sx={{ mt: 2 }}
-                  >
-                    {isFetching ? <CircularProgress size={24} /> : 'Change Password'}
-                  </Button>
-                </Grid>
-              </Grid>
+                </Box>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isFetching || isLockedOut}
+                  sx={{ mt: 2, alignSelf: 'flex-start' }}
+                >
+                  {isFetching ? <CircularProgress size={24} /> : 'Change Password'}
+                </Button>
+              </Box>
             </form>
-          </Grid>
-        </Grid>
-      </Paper>
+          </Paper>
+        </Box>
+      </Box>
 
       <Snackbar
         open={updateStatus.show}

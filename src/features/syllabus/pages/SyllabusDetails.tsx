@@ -39,6 +39,7 @@ import { AcademicYearSelect } from '../components/AcademicYearSelect';
 import { CourseSelectionDialog } from '../components/CourseSelectionDialog';
 import { fetchAllCourses } from '../../courses/core/_requests';
 import { useTranslation } from 'react-i18next';
+import { useLockoutStatus } from '../../../hooks/useLockoutStatus';
 
 interface SelectedCourse {
   courseId: number;
@@ -52,6 +53,7 @@ export const SyllabusDetails = () => {
   const { selectedSyllabus, isFetching, fetchAndUpdateSyllabusById } = useGetSyllabusById(
     syllabusId ? parseInt(syllabusId) : undefined
   );
+  const { isLockedOut } = useLockoutStatus();
   
   console.log('SyllabusDetails render:', { syllabusId, selectedSyllabus, isFetching });
   
@@ -372,6 +374,7 @@ export const SyllabusDetails = () => {
               variant="contained"
               color="primary"
               onClick={handleEditClick}
+              disabled={isLockedOut}
               size="medium"
               sx={{ 
                 minWidth: 'auto',
@@ -385,6 +388,7 @@ export const SyllabusDetails = () => {
               color="primary"
               startIcon={<AddIcon />}
               onClick={handleAddCourseClick}
+              disabled={isLockedOut}
               size="medium"
               sx={{ 
                 minWidth: 'auto',
@@ -398,6 +402,7 @@ export const SyllabusDetails = () => {
               color="error"
               startIcon={<DeleteIcon />}
               onClick={handleDeleteClick}
+              disabled={isLockedOut}
               size="medium"
               sx={{ 
                 minWidth: 'auto',
@@ -514,7 +519,7 @@ export const SyllabusDetails = () => {
                                 e.stopPropagation();
                                 handleRemoveCourse(course.id);
                               }}
-                              disabled={isUpdatingCourses}
+                              disabled={isUpdatingCourses || isLockedOut}
                             >
                               <DeleteIcon />
                             </IconButton>

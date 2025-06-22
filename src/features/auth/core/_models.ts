@@ -11,6 +11,7 @@ export interface RegisterUserRequest {
   password: string;
   phonePrefix: string;
   phoneNumber: string;
+  profilePictureUrl?: string;
 }
 
 export interface RegisterUserResponse {
@@ -20,6 +21,12 @@ export interface RegisterUserResponse {
   email: string;
   token: string;
   roles?: UserRole[];
+  emailConfirmed: boolean;
+  profilePictureUrl?: string;
+  lockoutEnabled: boolean;
+  lockoutEnd?: string;
+  status: string;
+  lockoutReason?: string;
 }
 
 export interface LoginRequest {
@@ -34,6 +41,12 @@ export interface LoginResponse {
   email: string;
   token: string;
   roles?: UserRole[];
+  emailConfirmed: boolean;
+  profilePictureUrl?: string;
+  lockoutEnabled: boolean;
+  lockoutEnd?: string;
+  status: string;
+  lockoutReason?: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -70,6 +83,7 @@ export interface UpdateProfileResponse {
   phonePrefix: string;
   phoneNumber: string;
   profilePictureUrl?: string;
+  emailConfirmed: boolean;
 }
 
 export interface ChangePasswordRequest {
@@ -90,4 +104,10 @@ export interface User {
   email: string;
   token: string;
   roles: UserRole[];
+  emailConfirmed: boolean;
+  profilePictureUrl?: string;
+  lockoutEnabled: boolean;
+  lockoutEnd?: string;
+  status: string;
+  lockoutReason?: string;
 } 
