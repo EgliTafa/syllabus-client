@@ -20,11 +20,13 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useTheme } from '@mui/material/styles';
 import { CountryPrefixDropdown, ProfilePictureUpload } from '../../../components';
+import { useLockoutStatus } from '../../../hooks/useLockoutStatus';
 
 export const UserProfile = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user, handleUpdateProfile, handleChangePassword, handleUploadProfilePicture, isFetching, error, clearError } = useAuth();
+  const { isLockedOut } = useLockoutStatus();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -229,7 +231,7 @@ export const UserProfile = () => {
               currentImageUrl={profileData.profilePictureUrl || undefined}
               onImageUpload={handleProfilePictureUpload}
               onImageRemove={handleProfilePictureRemove}
-              disabled={isFetching}
+              disabled={isFetching || isLockedOut}
               size="large"
               showPreview={false}
             />
@@ -252,7 +254,7 @@ export const UserProfile = () => {
                     value={profileData.firstName}
                     onChange={handleProfileChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
                   <TextField
                     fullWidth
@@ -261,7 +263,7 @@ export const UserProfile = () => {
                     value={profileData.lastName}
                     onChange={handleProfileChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
                 </Box>
                 
@@ -273,7 +275,7 @@ export const UserProfile = () => {
                   value={profileData.email}
                   onChange={handleProfileChange}
                   required
-                  disabled={isFetching}
+                  disabled={isFetching || isLockedOut}
                 />
                 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
@@ -281,7 +283,7 @@ export const UserProfile = () => {
                     value={profileData.phonePrefix}
                     onChange={handlePrefixChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
                   <TextField
                     fullWidth
@@ -290,14 +292,14 @@ export const UserProfile = () => {
                     value={profileData.phoneNumber}
                     onChange={handleProfileChange}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                   />
                 </Box>
                 
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={isFetching}
+                  disabled={isFetching || isLockedOut}
                   sx={{ mt: 2, alignSelf: 'flex-start' }}
                 >
                   {isFetching ? <CircularProgress size={24} /> : 'Update Profile'}
@@ -323,14 +325,14 @@ export const UserProfile = () => {
                   error={!!validationErrors.currentPassword}
                   helperText={validationErrors.currentPassword}
                   required
-                  disabled={isFetching}
+                  disabled={isFetching || isLockedOut}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
                           onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                           edge="end"
-                          disabled={isFetching}
+                          disabled={isFetching || isLockedOut}
                         >
                           {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -349,14 +351,14 @@ export const UserProfile = () => {
                     error={!!validationErrors.newPassword}
                     helperText={validationErrors.newPassword}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() => setShowNewPassword(!showNewPassword)}
                             edge="end"
-                            disabled={isFetching}
+                            disabled={isFetching || isLockedOut}
                           >
                             {showNewPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -374,14 +376,14 @@ export const UserProfile = () => {
                     error={!!validationErrors.confirmPassword}
                     helperText={validationErrors.confirmPassword}
                     required
-                    disabled={isFetching}
+                    disabled={isFetching || isLockedOut}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             edge="end"
-                            disabled={isFetching}
+                            disabled={isFetching || isLockedOut}
                           >
                             {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -393,7 +395,7 @@ export const UserProfile = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={isFetching}
+                  disabled={isFetching || isLockedOut}
                   sx={{ mt: 2, alignSelf: 'flex-start' }}
                 >
                   {isFetching ? <CircularProgress size={24} /> : 'Change Password'}

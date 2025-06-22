@@ -27,6 +27,7 @@ import {
   CircularProgress,
   Tooltip,
   Avatar,
+  InputAdornment,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -34,8 +35,9 @@ import {
   Restore as RestoreIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material';
-import { adminApi, UpdateUserRequest } from '../api/adminApi';
+import { adminApi, UpdateUserRequest, ChangePasswordByAdminRequest } from '../api/adminApi';
 import { CountryPrefixDropdown, ProfilePictureUpload } from '../../../components';
 import { decodeToken } from '../../../utils/jwtUtils';
 import { authApi } from '../../auth/api/authApi';
@@ -80,6 +82,11 @@ interface RevokeAccessForm {
   lockoutDurationDays?: number;
 }
 
+interface ChangePasswordForm {
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export const UserManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
@@ -98,6 +105,9 @@ export const UserManagementPage: React.FC = () => {
     phoneNumber: '',
     role: 'Student',
   });
+  // Store the profile picture file temporarily for create user
+  const [createUserProfilePictureFile, setCreateUserProfilePictureFile] = useState<File | null>(null);
+  const [createUserPreviewUrl, setCreateUserPreviewUrl] = useState<string | null>(null);
 
   // Edit user dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -110,6 +120,16 @@ export const UserManagementPage: React.FC = () => {
     phoneNumber: '',
     role: 'Student',
   });
+
+  // Change password dialog
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
+  const [changingPasswordUserId, setChangingPasswordUserId] = useState<string>('');
+  const [changePasswordForm, setChangePasswordForm] = useState<ChangePasswordForm>({
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Revoke access dialog
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
@@ -131,6 +151,15 @@ export const UserManagementPage: React.FC = () => {
     fetchUsers();
   }, []);
 
+  // Clean up object URLs when component unmounts or files are cleared
+  useEffect(() => {
+    return () => {
+      if (createUserPreviewUrl) {
+        URL.revokeObjectURL(createUserPreviewUrl);
+      }
+    };
+  }, [createUserPreviewUrl]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -148,7 +177,31 @@ export const UserManagementPage: React.FC = () => {
     try {
       setError(null);
       setSuccess(null);
-      await adminApi.createUser(createUserForm);
+      
+      // Create user first (without profile picture)
+      const userData = {
+        ...createUserForm,
+        profilePictureUrl: undefined // Don't include profile picture in initial creation
+      };
+      
+      const createdUser = await adminApi.createUser(userData);
+      
+      // If there's a profile picture file, upload it now that we have the user ID
+      if (createUserProfilePictureFile) {
+        try {
+          const profilePictureUrl = await handleProfilePictureUpload(createUserProfilePictureFile, createdUser.id);
+          
+          // Update the user with the profile picture URL
+          await adminApi.updateUser(createdUser.id, {
+            ...createUserForm,
+            profilePictureUrl: profilePictureUrl
+          });
+        } catch (uploadError: any) {
+          console.warn('Profile picture upload failed, but user was created:', uploadError);
+          // Don't fail the entire operation if profile picture upload fails
+        }
+      }
+      
       setSuccess(t('userManagement.userCreated'));
       setCreateDialogOpen(false);
       setCreateUserForm({
@@ -160,6 +213,14 @@ export const UserManagementPage: React.FC = () => {
         phoneNumber: '',
         role: 'Student',
       });
+      setCreateUserProfilePictureFile(null); // Clear the stored file
+      
+      // Clean up preview URL
+      if (createUserPreviewUrl) {
+        URL.revokeObjectURL(createUserPreviewUrl);
+        setCreateUserPreviewUrl(null);
+      }
+      
       fetchUsers();
     } catch (err: any) {
       setError(err.response?.data?.message || t('userManagement.failedToCreate'));
@@ -349,12 +410,20 @@ export const UserManagementPage: React.FC = () => {
   };
 
   const handleCreateProfilePictureUpload = async (file: File): Promise<string> => {
-    const imageUrl = await handleProfilePictureUpload(file);
+    // Store the file for later upload after user creation
+    setCreateUserProfilePictureFile(file);
+    
+    // Create a preview URL for the UI
+    const previewUrl = URL.createObjectURL(file);
+    setCreateUserPreviewUrl(previewUrl);
+    
+    // Update the form to show the preview
     setCreateUserForm(prev => ({
       ...prev,
-      profilePictureUrl: imageUrl
+      profilePictureUrl: previewUrl
     }));
-    return imageUrl;
+    
+    return previewUrl;
   };
 
   const handleEditProfilePictureUpload = async (file: File): Promise<string> => {
@@ -371,6 +440,13 @@ export const UserManagementPage: React.FC = () => {
       ...prev,
       profilePictureUrl: ''
     }));
+    setCreateUserProfilePictureFile(null); // Clear the stored file
+    
+    // Revoke the object URL to free memory
+    if (createUserPreviewUrl) {
+      URL.revokeObjectURL(createUserPreviewUrl);
+      setCreateUserPreviewUrl(null);
+    }
   };
 
   const handleEditProfilePictureRemove = () => {
@@ -378,6 +454,52 @@ export const UserManagementPage: React.FC = () => {
       ...prev,
       profilePictureUrl: ''
     }));
+  };
+
+  const openChangePasswordDialog = (userId: string) => {
+    setChangingPasswordUserId(userId);
+    setChangePasswordForm({
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setChangePasswordDialogOpen(true);
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      // Validate passwords match
+      if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      // Validate password length
+      if (changePasswordForm.newPassword.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
+
+      const passwordData: ChangePasswordByAdminRequest = {
+        newPassword: changePasswordForm.newPassword,
+        confirmPassword: changePasswordForm.confirmPassword,
+      };
+
+      await adminApi.changePasswordByAdmin(changingPasswordUserId, passwordData);
+      setSuccess(t('userManagement.passwordChanged'));
+      setChangePasswordDialogOpen(false);
+      setChangingPasswordUserId('');
+      setChangePasswordForm({
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to change password');
+    }
   };
 
   return (
@@ -390,7 +512,27 @@ export const UserManagementPage: React.FC = () => {
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
-          onClick={() => setCreateDialogOpen(true)}
+          onClick={() => {
+            // Reset form and clear stored file when opening dialog
+            setCreateUserForm({
+              firstName: '',
+              lastName: '',
+              email: '',
+              password: '',
+              phonePrefix: '+355',
+              phoneNumber: '',
+              role: 'Student',
+            });
+            setCreateUserProfilePictureFile(null);
+            
+            // Clean up any existing preview URL
+            if (createUserPreviewUrl) {
+              URL.revokeObjectURL(createUserPreviewUrl);
+              setCreateUserPreviewUrl(null);
+            }
+            
+            setCreateDialogOpen(true);
+          }}
         >
           {t('userManagement.createUser')}
         </Button>
@@ -469,6 +611,17 @@ export const UserManagementPage: React.FC = () => {
                           </IconButton>
                         </span>
                       </Tooltip>
+                      <Tooltip title={t('userManagement.changePassword')}>
+                        <span>
+                          <IconButton
+                            color="secondary"
+                            size="small"
+                            onClick={() => openChangePasswordDialog(user.id)}
+                          >
+                            <LockIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                       {isUserLocked(user) ? (
                         <Tooltip title={t('userManagement.restoreAccess')}>
                           <IconButton
@@ -509,7 +662,20 @@ export const UserManagementPage: React.FC = () => {
       )}
 
       {/* Create User Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={createDialogOpen} 
+        onClose={() => {
+          setCreateDialogOpen(false);
+          // Clean up when dialog is closed
+          setCreateUserProfilePictureFile(null);
+          if (createUserPreviewUrl) {
+            URL.revokeObjectURL(createUserPreviewUrl);
+            setCreateUserPreviewUrl(null);
+          }
+        }} 
+        maxWidth="sm" 
+        fullWidth
+      >
         <DialogTitle>{t('userManagement.createUser')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
@@ -580,7 +746,15 @@ export const UserManagementPage: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={() => {
+            setCreateDialogOpen(false);
+            // Clean up when dialog is closed
+            setCreateUserProfilePictureFile(null);
+            if (createUserPreviewUrl) {
+              URL.revokeObjectURL(createUserPreviewUrl);
+              setCreateUserPreviewUrl(null);
+            }
+          }}>{t('common.cancel')}</Button>
           <Button 
             onClick={handleCreateUser} 
             variant="contained"
@@ -695,6 +869,35 @@ export const UserManagementPage: React.FC = () => {
           <Button onClick={() => setRevokeDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleRevokeAccess} variant="contained" color="warning">
             {t('userManagement.revokeAccess')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={changePasswordDialogOpen} onClose={() => setChangePasswordDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('userManagement.changePassword')}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField
+              label={t('userManagement.newPassword')}
+              type="password"
+              value={changePasswordForm.newPassword}
+              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+              required
+            />
+            <TextField
+              label={t('userManagement.confirmPassword')}
+              type="password"
+              value={changePasswordForm.confirmPassword}
+              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+              required
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setChangePasswordDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleChangePassword} variant="contained" color="primary">
+            {t('userManagement.changePassword')}
           </Button>
         </DialogActions>
       </Dialog>

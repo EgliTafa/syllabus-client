@@ -202,70 +202,120 @@ export const CourseSelectionForSyllabus = ({
       )}
 
       {selectedCourses.length === 0 ? (
-        <Paper sx={{ p: 3, textAlign: 'center', bgcolor: 'grey.50' }}>
+        <Paper sx={{ 
+          p: 3, 
+          textAlign: 'center', 
+          bgcolor: 'background.paper',
+          border: 1,
+          borderColor: 'divider'
+        }}>
           <Typography color="textSecondary">
             No courses selected. Click "Add Existing Course" to select from available courses or "Create New Course" to add a new one.
           </Typography>
         </Paper>
       ) : (
-        <List>
-          {selectedCourses.map((course, index) => (
-            <Box key={course.id}>
-              <ListItem sx={{ 
-                background: '#f5f5f5', 
-                mb: 1, 
-                borderRadius: 1,
-                display: 'flex',
-                justifyContent: 'space-between'
+        <Box>
+          {/* Group courses by year */}
+          {[1, 2, 3].map(year => {
+            const yearCourses = selectedCourses.filter(course => course.year === year);
+            const yearCredits = yearCourses.reduce((sum, course) => sum + course.credits, 0);
+            
+            if (yearCourses.length === 0) return null;
+            
+            return (
+              <Paper key={year} sx={{ 
+                mb: 2, 
+                bgcolor: 'background.paper',
+                border: 1,
+                borderColor: 'divider'
               }}>
-                <ListItemText
-                  primary={`${index + 1}. ${course.title}`}
-                  secondary={
-                    <Box>
-                      <Typography variant="body2" color="textSecondary">
-                        Code: {course.code} | Year: {course.year} | Semester: {course.semester} | Credits: {course.credits}
-                      </Typography>
-                      <Box sx={{ mt: 1 }}>
-                        <Chip 
-                          label={`Type: ${course.courseTypeLabel || 'B'}`} 
-                          size="small" 
-                          color="primary" 
-                          variant="outlined"
-                          sx={{ mr: 1 }}
-                        />
-                        <Chip 
-                          label={`Exam: ${course.examMethod || 'P'}`} 
-                          size="small" 
-                          color="secondary" 
-                          variant="outlined"
-                          sx={{ mr: 1 }}
-                        />
-                        {course.electiveGroup && (
-                          <Chip 
-                            label={course.electiveGroup} 
-                            size="small" 
-                            color="success" 
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: 'primary.main', 
+                  color: 'white',
+                  borderTopLeftRadius: 1,
+                  borderTopRightRadius: 1
+                }}>
+                  <Typography variant="h6">
+                    Year {year} - {yearCourses.length} courses ({yearCredits} credits)
+                  </Typography>
+                </Box>
+                
+                <List sx={{ py: 0 }}>
+                  {yearCourses.map((course, index) => (
+                    <Box key={course.id}>
+                      <ListItem sx={{ 
+                        py: 1.5,
+                        px: 2,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        '&:hover': {
+                          bgcolor: 'action.hover'
+                        }
+                      }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                            {index + 1}. {course.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Code: {course.code} | Semester: {course.semester} | Credits: {course.credits}
+                          </Typography>
+                          <Box sx={{ mt: 1 }}>
+                            <Chip 
+                              label={`Type: ${course.courseTypeLabel || 'B'}`} 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                              sx={{ mr: 1 }}
+                            />
+                            <Chip 
+                              label={`Exam: ${course.examMethod || 'P'}`} 
+                              size="small" 
+                              color="secondary" 
+                              variant="outlined"
+                              sx={{ mr: 1 }}
+                            />
+                            {course.electiveGroup && (
+                              <Chip 
+                                label={course.electiveGroup} 
+                                size="small" 
+                                color="success" 
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                        <ListItemSecondaryAction>
+                          <IconButton 
+                            edge="end" 
+                            aria-label="delete" 
+                            onClick={() => handleRemoveCourse(course.id)}
+                            sx={{ color: 'error.main' }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                      {index < yearCourses.length - 1 && <Divider />}
                     </Box>
-                  }
-                />
-                <ListItemSecondaryAction>
-                  <IconButton 
-                    edge="end" 
-                    aria-label="delete" 
-                    onClick={() => handleRemoveCourse(course.id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-              {index < selectedCourses.length - 1 && <Divider />}
-            </Box>
-          ))}
-        </List>
+                  ))}
+                </List>
+              </Paper>
+            );
+          })}
+          
+          {/* Overall summary */}
+          <Paper sx={{ 
+            p: 2, 
+            bgcolor: 'success.main', 
+            color: 'white',
+            textAlign: 'center'
+          }}>
+            <Typography variant="h6">
+              Total: {selectedCourses.length} courses ({selectedCourses.reduce((sum, course) => sum + course.credits, 0)} credits)
+            </Typography>
+          </Paper>
+        </Box>
       )}
 
       {/* Course Selection Dialog */}

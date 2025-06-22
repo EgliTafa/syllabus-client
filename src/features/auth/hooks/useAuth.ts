@@ -28,6 +28,8 @@ interface AuthState {
     roles?: UserRole[];
     profilePictureUrl?: string;
     emailConfirmed: boolean;
+    lockoutEnabled: boolean;
+    status: string;
   } | null;
   isAuthenticated: boolean;
   isFetching: boolean;
@@ -77,8 +79,12 @@ export const useAuth = () => {
         switch (error.response.status) {
           case 400:
             if (error.response.data?.detail?.includes("conflict")) {
-              errorMessage =
-                "This email is already registered. Please use a different email or try logging in.";
+              if (error.response.data?.detail?.includes("phone number")) {
+                errorMessage = "This phone number is already registered. Please use a different phone number.";
+              } else {
+                errorMessage =
+                  "This email is already registered. Please use a different email or try logging in.";
+              }
             } else if (error.response.data?.detail?.includes("validation")) {
               errorMessage =
                 "Please check your input. All fields are required and password must be at least 8 characters.";
@@ -89,8 +95,12 @@ export const useAuth = () => {
             }
             break;
           case 409:
-            errorMessage =
-              "This email is already registered. Please use a different email or try logging in.";
+            if (error.response.data?.detail?.includes("phone number")) {
+              errorMessage = "This phone number is already registered. Please use a different phone number.";
+            } else {
+              errorMessage =
+                "This email is already registered. Please use a different email or try logging in.";
+            }
             break;
           case 500:
             errorMessage = "Server error. Please try again later.";
@@ -166,6 +176,8 @@ export const useAuth = () => {
           ...response,
           token: user?.token || "",
           roles: user?.roles || [],
+          lockoutEnabled: user?.lockoutEnabled || false,
+          status: user?.status || "Active"
         })
       );
     } catch (error: any) {
@@ -174,11 +186,22 @@ export const useAuth = () => {
       if (error.response) {
         switch (error.response.status) {
           case 400:
-            errorMessage = "Please check your input. All fields are required.";
+            if (error.response.data?.detail?.includes("phone number")) {
+              errorMessage = "This phone number is already registered to another user. Please use a different phone number.";
+            } else {
+              errorMessage = "Please check your input. All fields are required.";
+            }
             break;
           case 401:
             errorMessage = "Your session has expired. Please log in again.";
             handleLogout();
+            break;
+          case 409:
+            if (error.response.data?.detail?.includes("phone number")) {
+              errorMessage = "This phone number is already registered to another user. Please use a different phone number.";
+            } else {
+              errorMessage = "This email is already taken by another user.";
+            }
             break;
           case 500:
             errorMessage = "Server error. Please try again later.";
@@ -343,7 +366,9 @@ export const useAuth = () => {
           ...user,
           profilePictureUrl: response.profilePictureUrl,
           emailConfirmed: user.emailConfirmed,
-          roles: user.roles || []
+          roles: user.roles || [],
+          lockoutEnabled: user.lockoutEnabled,
+          status: user.status
         }));
       }
 

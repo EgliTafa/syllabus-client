@@ -114,6 +114,16 @@ export interface SearchUserResponse {
   email: string;
 }
 
+export interface ChangePasswordByAdminRequest {
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordByAdminResponse {
+  message: string;
+  changedAt: string;
+}
+
 export const adminApi = {
   getAllUsers: async (): Promise<User[]> => {
     const response = await api.get<User[]>('/users');
@@ -132,6 +142,11 @@ export const adminApi = {
 
   updateUser: async (userId: string, userData: UpdateUserRequest): Promise<UpdateUserResponse> => {
     const response = await api.put<UpdateUserResponse>(`/users/${userId}`, userData);
+    return response.data;
+  },
+
+  changePasswordByAdmin: async (userId: string, passwordData: ChangePasswordByAdminRequest): Promise<ChangePasswordByAdminResponse> => {
+    const response = await api.post<ChangePasswordByAdminResponse>(`/users/${userId}/change-password`, passwordData);
     return response.data;
   },
 

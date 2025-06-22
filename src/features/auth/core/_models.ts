@@ -22,6 +22,11 @@ export interface RegisterUserResponse {
   token: string;
   roles?: UserRole[];
   emailConfirmed: boolean;
+  profilePictureUrl?: string;
+  lockoutEnabled: boolean;
+  lockoutEnd?: string;
+  status: string;
+  lockoutReason?: string;
 }
 
 export interface LoginRequest {
@@ -37,6 +42,11 @@ export interface LoginResponse {
   token: string;
   roles?: UserRole[];
   emailConfirmed: boolean;
+  profilePictureUrl?: string;
+  lockoutEnabled: boolean;
+  lockoutEnd?: string;
+  status: string;
+  lockoutReason?: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -96,4 +106,8 @@ export interface User {
   roles: UserRole[];
   emailConfirmed: boolean;
   profilePictureUrl?: string;
+  lockoutEnabled: boolean;
+  lockoutEnd?: string;
+  status: string;
+  lockoutReason?: string;
 } 

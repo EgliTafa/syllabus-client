@@ -19,6 +19,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { CreateSyllabusRequest, Course } from '../core/_models';
+import { createSyllabus } from '../core/_requests';
+import { EvaluationMethod, CourseType } from '../../courses/core/_models';
 import { AcademicYearSelect } from '../components/AcademicYearSelect';
 import { CourseSelectionForSyllabus } from '../components/CourseSelectionForSyllabus';
 
@@ -71,30 +73,81 @@ export const CreateSyllabus = () => {
     setIsSubmitting(true);
 
     try {
-      // Map each course to move practiceHours, courseTypeLabel, and examMethod into Detail
-      const mappedCourses = courses.map((course) => {
-        const { practiceHours, courseTypeLabel, examMethod, ...rest } = course;
-        return {
-          ...rest,
-          detail: {
-            practiceHours,
-            courseTypeLabel,
-            examMethod
-          }
-        };
-      });
+      // Helper function to convert exam method string to enum
+      const convertExamMethod = (examMethod: string): EvaluationMethod => {
+        switch (examMethod) {
+          case 'P':
+          case 'Provim':
+            return EvaluationMethod.Exam;
+          case 'V':
+          case 'Vlerësim i vazhduar':
+            return EvaluationMethod.ContinuousAssessment;
+          case 'F':
+          case 'Fiton':
+            return EvaluationMethod.Pass;
+          case 'E':
+          case 'Provim Diplome':
+            return EvaluationMethod.DiplomaExam;
+          default:
+            return EvaluationMethod.Exam;
+        }
+      };
+
+      // Helper function to convert course type string to enum
+      const convertCourseType = (courseTypeLabel: string): CourseType => {
+        switch (courseTypeLabel) {
+          case 'A':
+          case 'Avancuar':
+            return CourseType.Advanced;
+          case 'B':
+          case 'Bazë':
+            return CourseType.Mandatory;
+          case 'C':
+          case 'Specializim':
+            return CourseType.Specialized;
+          case 'D':
+          case 'Zgjedhje':
+            return CourseType.Elective;
+          case 'E':
+          case 'Projekt Final':
+            return CourseType.FinalProject;
+          default:
+            return CourseType.Mandatory;
+        }
+      };
+
+      // Map courses to match CreateCourseRequest structure
+      const mappedCourses = courses.map((course) => ({
+        title: course.title,
+        code: course.code,
+        year: course.year,
+        semester: course.semester,
+        credits: course.credits,
+        lectureHours: course.lectureHours,
+        seminarHours: course.seminarHours,
+        labHours: course.labHours,
+        practiceHours: course.practiceHours,
+        evaluation: convertExamMethod(course.examMethod || 'P'),
+        type: convertCourseType(course.courseTypeLabel || 'B'),
+        electiveGroup: course.electiveGroup,
+        syllabusId: 0 // Will be set by the backend
+      }));
 
       const syllabusData: CreateSyllabusRequest = {
         name,
         academicYear,
-        courses: mappedCourses as any
+        courses: mappedCourses
       };
 
-      // TODO: Implement API call to create syllabus
-      console.log('Creating syllabus:', syllabusData);
+      // Create the syllabus via API
+      const createdSyllabus = await createSyllabus(syllabusData);
+      console.log('Syllabus created successfully:', createdSyllabus);
+      
+      // Navigate to the syllabus list or the created syllabus details
       navigate('/syllabus');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating syllabus:', error);
+      setValidationError(error?.response?.data?.message || 'Failed to create syllabus. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
