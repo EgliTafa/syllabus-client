@@ -28,7 +28,6 @@ import { useTokenValidation } from "../../features/auth/hooks/useTokenValidation
 import { ThemeToggle } from "../components";
 import { useGetAllSyllabuses } from "../../features/syllabus/hooks/useSyllabuses";
 import { useDispatch } from "react-redux";
-import { SyllabusHistoryDropdown } from "../../features/syllabus/components/SyllabusHistoryDropdown";
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { EmailConfirmationReminder } from '../../components/EmailConfirmationReminder';
@@ -55,14 +54,6 @@ export const MainLayout = () => {
       }
     }
   }, [isAuthenticated, fetchAndUpdateSyllabuses, dispatch, checkTokenValidity]);
-
-  // Get unique academic years and sort them in ascending order
-  const academicYears = Array.from(new Set(syllabusList.map((s) => s.academicYear)))
-    .sort((a, b) => {
-      const yearA = parseInt(a.split('-')[0]);
-      const yearB = parseInt(b.split('-')[0]);
-      return yearA - yearB;
-    });
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -128,20 +119,6 @@ export const MainLayout = () => {
               <ListItem component={RouterLink} to="/syllabus" onClick={handleMobileMenuToggle}>
                 <ListItemText primary={t('nav.syllabuses')} />
               </ListItem>
-              <ListItem>
-                <ListItemText primary={t('nav.syllabusHistory')} primaryTypographyProps={{ fontWeight: 'bold' }} />
-              </ListItem>
-              {academicYears.map((year) => (
-                <ListItem
-                  key={year}
-                  component={RouterLink}
-                  to={`/syllabus/history/${year}`}
-                  onClick={handleMobileMenuToggle}
-                  sx={{ pl: 4 }}
-                >
-                  <ListItemText primary={year} />
-                </ListItem>
-              ))}
               {isAdmin() && (
                 <ListItem component={RouterLink} to="/admin" onClick={handleMobileMenuToggle}>
                   <ListItemText primary={t('nav.adminManagement')} />
@@ -203,7 +180,6 @@ export const MainLayout = () => {
                   <Button color="inherit" component={RouterLink} to="/syllabus">
                     {t('nav.syllabuses')}
                   </Button>
-                  <SyllabusHistoryDropdown />
                   {isAdmin() && (
                     <Button
                       color="inherit"

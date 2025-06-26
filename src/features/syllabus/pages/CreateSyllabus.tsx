@@ -21,13 +21,13 @@ import AddIcon from '@mui/icons-material/Add';
 import { CreateSyllabusRequest, Course } from '../core/_models';
 import { createSyllabus } from '../core/_requests';
 import { EvaluationMethod, CourseType } from '../../courses/core/_models';
-import { AcademicYearSelect } from '../components/AcademicYearSelect';
 import { CourseSelectionForSyllabus } from '../components/CourseSelectionForSyllabus';
+import { ProgramSelect } from '../../programs/components/ProgramSelect';
 
 export const CreateSyllabus = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
+  const [programId, setProgramId] = useState<number | ''>('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -39,7 +39,10 @@ export const CreateSyllabus = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setValidationError(null);
-    if (!name || !academicYear || courses.length === 0) return;
+    if (!name || !programId || courses.length === 0) {
+      setValidationError('Please fill in all required fields and add at least one course.');
+      return;
+    }
 
     // Validation: Ensure only one Elective I and one Elective II per syllabus
     const electiveICount = courses.filter(c => c.electiveGroup === 'Elective I').length;
@@ -135,7 +138,7 @@ export const CreateSyllabus = () => {
 
       const syllabusData: CreateSyllabusRequest = {
         name,
-        academicYear,
+        programId: programId as number,
         courses: mappedCourses
       };
 
@@ -200,64 +203,61 @@ export const CreateSyllabus = () => {
               onChange={(e) => setName(e.target.value)}
               required
             />
-            <AcademicYearSelect
-              value={academicYear}
-              onChange={setAcademicYear}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
+
+            <ProgramSelect
+              value={programId}
+              onChange={setProgramId}
               disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Creating...' : 'Create Syllabus'}
-            </Button>
+            />
+
+            <CourseSelectionForSyllabus
+              selectedCourses={courses}
+              onCoursesChange={handleCoursesChange}
+            />
+
+            {/* Display totals */}
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Summary
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                {Object.entries(totals).map(([year, data]) => (
+                  <Box key={year} sx={{ flex: '1 1 200px', minWidth: '200px' }}>
+                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                      <Typography variant="h6">Year {year}</Typography>
+                      <Typography>{data.courses} courses</Typography>
+                      <Typography>{data.credits} credits</Typography>
+                    </Paper>
+                  </Box>
+                ))}
+                <Box sx={{ flex: '1 1 100%' }}>
+                  <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.light', color: 'white' }}>
+                    <Typography variant="h6">Total</Typography>
+                    <Typography>{overall.courses} courses</Typography>
+                    <Typography>{overall.credits} credits</Typography>
+                  </Paper>
+                </Box>
+              </Box>
+            </Box>
+
+            <Box display="flex" gap={2} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/syllabus')}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={isSubmitting || !name || !programId || courses.length === 0}
+              >
+                {isSubmitting ? 'Creating...' : 'Create Syllabus'}
+              </Button>
+            </Box>
           </Box>
         </form>
-
-        <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-          Course Management
-        </Typography>
-
-        <CourseSelectionForSyllabus
-          selectedCourses={courses}
-          onCoursesChange={handleCoursesChange}
-        />
-
-        {/* Summary Section */}
-        {courses.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Syllabus Summary
-            </Typography>
-            
-            <Grid container spacing={2}>
-              {[1, 2, 3].map(year => (
-                <Grid key={year} sx={{ width: { xs: '100%', sm: 'calc(33.33% - 16px)' } }}>
-                  <Paper sx={{ p: 2, textAlign: 'center' }}>
-                    <Typography variant="h6">Year {year}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {totals[year]?.courses || 0} courses
-                    </Typography>
-                    <Typography variant="h5" color="primary">
-                      {totals[year]?.credits || 0} credits
-        </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-
-            <Paper sx={{ p: 2, mt: 2, textAlign: 'center', bgcolor: 'primary.main', color: 'white' }}>
-              <Typography variant="h6">Total</Typography>
-              <Typography variant="body2">
-                {overall.courses} courses
-              </Typography>
-              <Typography variant="h5">
-                {overall.credits} credits
-              </Typography>
-            </Paper>
-          </Box>
-        )}
       </Paper>
     </Box>
   );

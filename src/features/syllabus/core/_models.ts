@@ -1,5 +1,24 @@
 import { TeachingPlan, EvaluationBreakdown, Topic } from '../../courses/core/_models';
 
+export interface Department {
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Program {
+  id: number;
+  name: string;
+  description: string;
+  academicYear: string;
+  departmentId: number;
+  departmentName: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Course {
     id: number;
   title: string;
@@ -32,13 +51,13 @@ export interface Course {
 export interface Syllabus {
     id: number;
     name: string;
-    academicYear: string;
+    program: Program;
     courses: Course[];
 }
   
 export interface CreateSyllabusRequest {
     name: string;
-    academicYear: string;
+    programId: number;
     courses: CreateCourseRequest[];
 }
   
@@ -60,7 +79,6 @@ export interface CreateCourseRequest {
 export interface UpdateSyllabusRequest {
     syllabusId: number;
     name: string;
-    academicYear: string;
 }
   
 export interface AddOrRemoveCoursesFromSyllabusRequest {
