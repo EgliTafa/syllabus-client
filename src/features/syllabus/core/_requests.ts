@@ -43,9 +43,18 @@ export const addOrRemoveCoursesFromSyllabus = async (
   return response.data;
 };
 
-export const exportSyllabusPdf = async (syllabusId: number): Promise<Blob> => {
-  const response = await api.get<Blob>(`/${syllabusId}/export-pdf`, {
+export const exportSyllabusPdf = async (syllabus: Syllabus): Promise<{ blob: Blob; filename: string }> => {
+  const response = await api.get<Blob>(`/${syllabus.id}/export-pdf`, {
     responseType: 'blob'
   });
-  return response.data;
+  
+  // Generate filename with syllabus name, academic year, program, and department
+  const syllabusName = syllabus.name?.replace(/\s+/g, '_') || 'Syllabus';
+  const academicYear = syllabus.program?.academicYear || '';
+  const programName = syllabus.program?.name?.replace(/\s+/g, '_') || '';
+  const departmentName = syllabus.program?.departmentName?.replace(/\s+/g, '_') || '';
+  
+  const filename = `${syllabusName}_${academicYear}_${programName}_${departmentName}.pdf`;
+  
+  return { blob: response.data, filename };
 };

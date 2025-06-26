@@ -132,7 +132,7 @@ export const SyllabusDetails = () => {
     setExportError(null);
     
     try {
-      const pdfBlob = await exportSyllabusPdf(selectedSyllabus.id);
+      const { blob: pdfBlob, filename } = await exportSyllabusPdf(selectedSyllabus);
       
       // Create a URL for the blob
       const url = window.URL.createObjectURL(pdfBlob);
@@ -140,7 +140,7 @@ export const SyllabusDetails = () => {
       // Create a temporary link element
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Syllabus_${selectedSyllabus.id}.pdf`;
+      link.download = filename;
       
       // Append to body, click, and remove
       document.body.appendChild(link);
