@@ -12,11 +12,16 @@ export interface Program {
   id: number;
   name: string;
   description: string;
-  academicYear: string;
   departmentId: number;
   departmentName: string;
   createdAt: string;
   updatedAt?: string;
+  academicYears: ProgramAcademicYear[];
+}
+
+export interface ProgramAcademicYear {
+  id: number;
+  academicYear: string;
 }
 
 export interface Course {
@@ -52,12 +57,13 @@ export interface Syllabus {
     id: number;
     name: string;
     program: Program;
+    programAcademicYear?: ProgramAcademicYear;
     courses: Course[];
 }
   
 export interface CreateSyllabusRequest {
     name: string;
-    programId: number;
+    programAcademicYearId: number;
     courses: CreateCourseRequest[];
 }
   

@@ -134,7 +134,12 @@ export const ProgramsList = () => {
                 
                 <Box display="flex" gap={1} mb={2}>
                   <Chip 
-                    label={program.academicYear} 
+                    label={program.academicYears?.length > 0 
+                      ? program.academicYears.length === 1 
+                        ? program.academicYears[0].academicYear 
+                        : `${program.academicYears.length} years`
+                      : 'No years'
+                    } 
                     size="small" 
                     color="primary" 
                     variant="outlined"

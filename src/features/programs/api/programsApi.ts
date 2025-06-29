@@ -103,4 +103,14 @@ export const programsApi = {
     const response = await departmentApi.get<Department>(`/${id}`);
     return response.data;
   },
+
+  // Add this function to fetch all program academic years
+  getAllProgramAcademicYears: async (departmentId?: number): Promise<any[]> => {
+    let url = '/program-academic-years';
+    if (departmentId) {
+      url += `?departmentId=${departmentId}`;
+    }
+    const response = await api.get<any[]>(url);
+    return response.data;
+  },
 }; 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   FormControl,
@@ -9,93 +9,63 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { Program } from '../core/_models';
 import { programsApi } from '../api/programsApi';
+
+interface ProgramAcademicYear {
+  id: number;
+  academicYear: string;
+  program: {
+    id: number;
+    name: string;
+    departmentName: string;
+  };
+}
 
 interface ProgramSelectProps {
   value: number | '';
   onChange: (value: number) => void;
   disabled?: boolean;
-  departmentId?: number; // Optional filter by department
-  academicYear?: string; // Optional filter by academic year
+  departmentId?: number;
 }
 
-export const ProgramSelect = ({ 
-  value, 
-  onChange, 
-  disabled = false, 
-  departmentId,
-  academicYear 
-}: ProgramSelectProps) => {
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [loading, setLoading] = useState(false);
+export const ProgramSelect = ({ value, onChange, disabled, departmentId }: ProgramSelectProps) => {
+  const [programAcademicYears, setProgramAcademicYears] = useState<ProgramAcademicYear[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPrograms = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await programsApi.list();
-        let filteredPrograms = response;
-
-        // Apply filters if provided
-        if (departmentId) {
-          filteredPrograms = filteredPrograms.filter((p: Program) => p.departmentId === departmentId);
-        }
-        if (academicYear) {
-          filteredPrograms = filteredPrograms.filter((p: Program) => p.academicYear === academicYear);
-        }
-
-        setPrograms(filteredPrograms);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load programs');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPrograms();
-  }, [departmentId, academicYear]);
+    setLoading(true);
+    setError(null);
+    // Fetch all program academic years (implement this API call in your backend/frontend service)
+    programsApi.getAllProgramAcademicYears(departmentId)
+      .then(setProgramAcademicYears)
+      .catch(() => setError('Failed to load programs'))
+      .finally(() => setLoading(false));
+  }, [departmentId]);
 
   const handleChange = (event: SelectChangeEvent<number>) => {
-    const selectedValue = event.target.value as number;
-    onChange(selectedValue);
+    onChange(Number(event.target.value));
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" p={2}>
-        <CircularProgress size={24} />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
-  }
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box>
       <FormControl fullWidth disabled={disabled}>
-        <InputLabel>Program</InputLabel>
+        <InputLabel>Program & Academic Year</InputLabel>
         <Select
           value={value}
-          label="Program"
+          label="Program & Academic Year"
           onChange={handleChange}
         >
-          {programs.map((program) => (
-            <MenuItem key={program.id} value={program.id}>
-              {program.name} - {program.departmentName}
+          {programAcademicYears.map((pay) => (
+            <MenuItem key={pay.id} value={pay.id}>
+              {pay.program.name} - {pay.academicYear} ({pay.program.departmentName})
             </MenuItem>
           ))}
         </Select>
       </FormControl>
-      {value && (
-        <Box mt={1}>
-          <strong>Academic Year:</strong> {programs.find(p => p.id === value)?.academicYear || 'N/A'}
-        </Box>
-      )}
     </Box>
   );
 }; 

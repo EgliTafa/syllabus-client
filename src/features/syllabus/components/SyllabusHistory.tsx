@@ -53,7 +53,7 @@ export const SyllabusHistory = () => {
   };
 
   // Get unique academic years and sort them in ascending order (oldest to newest)
-  const academicYears = Array.from(new Set(syllabusList.map((s: Syllabus) => s.program.academicYear)))
+  const academicYears = Array.from(new Set(syllabusList.map((s: Syllabus) => s.programAcademicYear?.academicYear || s.program.academicYears?.[0]?.academicYear).filter(Boolean) as string[]))
     .sort((a: string, b: string) => {
       // Extract the first year from the academic year string (e.g., "2023-2024" -> "2023")
       const yearA = parseInt(a.split('-')[0]);

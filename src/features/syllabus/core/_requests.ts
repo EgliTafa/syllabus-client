@@ -50,7 +50,7 @@ export const exportSyllabusPdf = async (syllabus: Syllabus): Promise<{ blob: Blo
   
   // Generate filename with syllabus name, academic year, program, and department
   const syllabusName = syllabus.name?.replace(/\s+/g, '_') || 'Syllabus';
-  const academicYear = syllabus.program?.academicYear || '';
+  const academicYear = syllabus.programAcademicYear?.academicYear || '';
   const programName = syllabus.program?.name?.replace(/\s+/g, '_') || '';
   const departmentName = syllabus.program?.departmentName?.replace(/\s+/g, '_') || '';
   

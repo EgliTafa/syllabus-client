@@ -40,14 +40,20 @@ export const SyllabusList = () => {
     fetchAndUpdateSyllabuses(dispatch);
   }, [dispatch]);
 
-  // Get unique academic years from programs
+  // Debug: Log programs to check academicYear values
+  console.log('Programs loaded for academic year filter:', programs);
+
+  // Get unique academic years from all programs' academic years
   const academicYears = useMemo(() => {
-    const years = Array.from(new Set(programs.map(p => p.academicYear)))
-      .sort((a, b) => {
-        const yearA = parseInt(a.split('-')[0]);
-        const yearB = parseInt(b.split('-')[0]);
-        return yearA - yearB;
-      });
+    const years = Array.from(
+      new Set(
+        programs.flatMap(p => (p.academicYears || []).map((ay: { academicYear: string }) => ay.academicYear)).filter(Boolean)
+      )
+    ).sort((a, b) => {
+      const yearA = parseInt(a.split('-')[0]);
+      const yearB = parseInt(b.split('-')[0]);
+      return yearA - yearB;
+    });
     return years;
   }, [programs]);
 
@@ -56,7 +62,7 @@ export const SyllabusList = () => {
     return syllabusList.filter(syllabus => {
       const matchesDepartment = !departmentFilter || syllabus.program.departmentId.toString() === departmentFilter;
       const matchesProgram = !programFilter || syllabus.program.id.toString() === programFilter;
-      const matchesAcademicYear = !academicYearFilter || syllabus.program.academicYear === academicYearFilter;
+      const matchesAcademicYear = !academicYearFilter || syllabus.programAcademicYear?.academicYear === academicYearFilter || syllabus.program.academicYears?.[0]?.academicYear === academicYearFilter;
       
       return matchesDepartment && matchesProgram && matchesAcademicYear;
     });
@@ -96,10 +102,11 @@ export const SyllabusList = () => {
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
           <FormControl fullWidth>
-            <InputLabel>Department</InputLabel>
+            <InputLabel shrink>Department</InputLabel>
             <Select
               value={departmentFilter}
               label="Department"
+              displayEmpty
               onChange={(e) => {
                 setDepartmentFilter(e.target.value);
                 setProgramFilter(''); // Reset program filter when department changes
@@ -116,10 +123,11 @@ export const SyllabusList = () => {
             </Select>
           </FormControl>
           <FormControl fullWidth>
-            <InputLabel>Program</InputLabel>
+            <InputLabel shrink>Program</InputLabel>
             <Select
               value={programFilter}
               label="Program"
+              displayEmpty
               onChange={(e) => setProgramFilter(e.target.value)}
               disabled={!departmentFilter} // Disable if no department selected
             >
@@ -128,16 +136,17 @@ export const SyllabusList = () => {
               </MenuItem>
               {filteredPrograms.map((program) => (
                 <MenuItem key={program.id} value={program.id.toString()}>
-                  {program.name} ({program.academicYear})
+                  {program.name} ({(program.academicYears || []).map((ay: { academicYear: string }) => ay.academicYear).join(', ') || 'No years'})
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
           <FormControl fullWidth>
-            <InputLabel>Academic Year</InputLabel>
+            <InputLabel shrink>Academic Year</InputLabel>
             <Select
               value={academicYearFilter}
               label="Academic Year"
+              displayEmpty
               onChange={(e) => setAcademicYearFilter(e.target.value)}
             >
               <MenuItem value="">
@@ -196,7 +205,7 @@ export const SyllabusList = () => {
                   {syllabus.name}
                 </Typography>
                 <Typography color="textSecondary" gutterBottom>
-                  {syllabus.program.name} ({syllabus.program.academicYear})
+                  {syllabus.program.name} {syllabus.programAcademicYear ? `(${syllabus.programAcademicYear.academicYear})` : syllabus.program.academicYears?.[0] ? `(${syllabus.program.academicYears[0].academicYear})` : ''}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" gutterBottom>
                   {syllabus.program.departmentName}

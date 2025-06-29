@@ -6,15 +6,20 @@ export interface Department {
   updatedAt?: string;
 }
 
+export interface ProgramAcademicYear {
+  id: number;
+  academicYear: string;
+}
+
 export interface Program {
   id: number;
   name: string;
   description: string;
-  academicYear: string;
   departmentId: number;
   departmentName: string;
   createdAt: string;
   updatedAt?: string;
+  academicYears: ProgramAcademicYear[];
 }
 
 export interface CreateProgramRequest {

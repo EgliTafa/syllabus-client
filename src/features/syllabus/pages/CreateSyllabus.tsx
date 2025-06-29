@@ -27,7 +27,7 @@ import { ProgramSelect } from '../../programs/components/ProgramSelect';
 export const CreateSyllabus = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [programId, setProgramId] = useState<number | ''>('');
+  const [programAcademicYearId, setProgramAcademicYearId] = useState<number | ''>('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export const CreateSyllabus = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setValidationError(null);
-    if (!name || !programId || courses.length === 0) {
+    if (!name || !programAcademicYearId || courses.length === 0) {
       setValidationError('Please fill in all required fields and add at least one course.');
       return;
     }
@@ -138,7 +138,7 @@ export const CreateSyllabus = () => {
 
       const syllabusData: CreateSyllabusRequest = {
         name,
-        programId: programId as number,
+        programAcademicYearId: programAcademicYearId as number,
         courses: mappedCourses
       };
 
@@ -205,8 +205,8 @@ export const CreateSyllabus = () => {
             />
 
             <ProgramSelect
-              value={programId}
-              onChange={setProgramId}
+              value={programAcademicYearId}
+              onChange={setProgramAcademicYearId}
               disabled={isSubmitting}
             />
 
@@ -251,7 +251,7 @@ export const CreateSyllabus = () => {
               <Button
                 type="submit"
                 variant="contained"
-                disabled={isSubmitting || !name || !programId || courses.length === 0}
+                disabled={isSubmitting || !name || !programAcademicYearId || courses.length === 0}
               >
                 {isSubmitting ? 'Creating...' : 'Create Syllabus'}
               </Button>

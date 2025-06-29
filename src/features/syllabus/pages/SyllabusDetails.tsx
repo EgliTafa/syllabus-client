@@ -628,7 +628,7 @@ export const SyllabusDetails = () => {
               {selectedSyllabus.name}
             </Typography>
             <Typography variant="h6" color="textSecondary" gutterBottom>
-              {selectedSyllabus.program.name} ({selectedSyllabus.program.academicYear})
+              {selectedSyllabus.program.name} {selectedSyllabus.programAcademicYear ? `(${selectedSyllabus.programAcademicYear.academicYear})` : selectedSyllabus.program.academicYears?.[0] ? `(${selectedSyllabus.program.academicYears[0].academicYear})` : ''}
             </Typography>
             <Typography variant="body1" color="textSecondary">
               {selectedSyllabus.program.departmentName}
