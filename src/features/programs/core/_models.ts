@@ -22,6 +22,12 @@ export interface Program {
   academicYears: ProgramAcademicYear[];
 }
 
+export interface ProgramAcademicYearResponse {
+  id: number;
+  academicYear: string;
+  program: Program;
+}
+
 export interface CreateProgramRequest {
   name: string;
   description: string;

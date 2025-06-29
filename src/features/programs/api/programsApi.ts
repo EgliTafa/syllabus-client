@@ -3,7 +3,8 @@ import {
   CreateProgramRequest, 
   UpdateProgramRequest,
   Program,
-  Department
+  Department,
+  ProgramAcademicYearResponse
 } from '../core/_models';
 import { AuthInitializer } from '../../auth/core/AuthInitializer';
 import { isTokenExpired } from '../../../utils/jwtUtils';
@@ -105,12 +106,12 @@ export const programsApi = {
   },
 
   // Add this function to fetch all program academic years
-  getAllProgramAcademicYears: async (departmentId?: number): Promise<any[]> => {
+  getAllProgramAcademicYears: async (departmentId?: number): Promise<ProgramAcademicYearResponse[]> => {
     let url = '/program-academic-years';
     if (departmentId) {
       url += `?departmentId=${departmentId}`;
     }
-    const response = await api.get<any[]>(url);
+    const response = await api.get<ProgramAcademicYearResponse[]>(url);
     return response.data;
   },
 }; 

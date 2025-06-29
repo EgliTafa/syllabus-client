@@ -23,6 +23,7 @@ export class AuthInitializer {
       
       // Validate the stored state has required fields
       if (!this.isValidAuthState(state)) {
+        console.log('Invalid auth state found, clearing and returning default');
         this.clearAuthState();
         return this.getDefaultState();
       }
@@ -34,6 +35,18 @@ export class AuthInitializer {
           this.clearAuthState();
           return this.getDefaultState();
         }
+        
+        // Additional validation: ensure user object has required fields
+        if (!this.isValidUser(state.user)) {
+          console.log('Invalid user object found, clearing auth state');
+          this.clearAuthState();
+          return this.getDefaultState();
+        }
+      } else if (state.isAuthenticated) {
+        // If marked as authenticated but no token, clear the state
+        console.log('No token found but marked as authenticated, clearing auth state');
+        this.clearAuthState();
+        return this.getDefaultState();
       }
 
       return state;
@@ -54,6 +67,12 @@ export class AuthInitializer {
     error: string | null;
   }): void {
     try {
+      // Validate state before saving
+      if (state.isAuthenticated && (!state.user || !state.user.token)) {
+        console.warn('Attempting to save authenticated state without valid user/token');
+        return;
+      }
+      
       localStorage.setItem(this.AUTH_STATE_KEY, JSON.stringify(state));
     } catch (error) {
       console.error('Error saving auth state:', error);
@@ -66,12 +85,18 @@ export class AuthInitializer {
   public static clearAuthState(): void {
     localStorage.removeItem(this.AUTH_STATE_KEY);
     localStorage.removeItem('token'); // Also clear the legacy token storage
+    sessionStorage.removeItem('token'); // Clear session storage as well
   }
 
   /**
    * Saves the auth token to localStorage
    */
   public static saveToken(token: string): void {
+    if (!token || isTokenExpired(token)) {
+      console.warn('Attempting to save invalid or expired token');
+      return;
+    }
+    
     const state = this.loadInitialState();
     if (state.user) {
       state.user.token = token;
@@ -84,7 +109,19 @@ export class AuthInitializer {
    */
   public static getToken(): string | null {
     const state = this.loadInitialState();
-    return state.user?.token ?? null;
+    const token = state.user?.token;
+    
+    if (!token) {
+      return null;
+    }
+    
+    if (isTokenExpired(token)) {
+      console.log('Retrieved token is expired, clearing auth state');
+      this.clearAuthState();
+      return null;
+    }
+    
+    return token;
   }
 
   /**
@@ -96,6 +133,31 @@ export class AuthInitializer {
       return false;
     }
     return !isTokenExpired(token);
+  }
+
+  /**
+   * Validates the current authentication state
+   */
+  public static validateAuthState(): boolean {
+    const state = this.loadInitialState();
+    
+    if (!state.isAuthenticated) {
+      return false;
+    }
+    
+    if (!state.user || !state.user.token) {
+      console.log('User marked as authenticated but no valid user/token found');
+      this.clearAuthState();
+      return false;
+    }
+    
+    if (isTokenExpired(state.user.token)) {
+      console.log('Token is expired, clearing auth state');
+      this.clearAuthState();
+      return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -126,6 +188,21 @@ export class AuthInitializer {
       'isAuthenticated' in state &&
       'isFetching' in state &&
       'error' in state
+    );
+  }
+
+  /**
+   * Validates that the user object has required fields
+   */
+  private static isValidUser(user: any): boolean {
+    return (
+      user &&
+      typeof user === 'object' &&
+      'id' in user &&
+      'email' in user &&
+      'token' in user &&
+      typeof user.token === 'string' &&
+      user.token.length > 0
     );
   }
 } 

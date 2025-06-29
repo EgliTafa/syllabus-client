@@ -10,16 +10,7 @@ import {
   Alert,
 } from '@mui/material';
 import { programsApi } from '../api/programsApi';
-
-interface ProgramAcademicYear {
-  id: number;
-  academicYear: string;
-  program: {
-    id: number;
-    name: string;
-    departmentName: string;
-  };
-}
+import { ProgramAcademicYearResponse } from '../core/_models';
 
 interface ProgramSelectProps {
   value: number | '';
@@ -29,7 +20,7 @@ interface ProgramSelectProps {
 }
 
 export const ProgramSelect = ({ value, onChange, disabled, departmentId }: ProgramSelectProps) => {
-  const [programAcademicYears, setProgramAcademicYears] = useState<ProgramAcademicYear[]>([]);
+  const [programAcademicYears, setProgramAcademicYears] = useState<ProgramAcademicYearResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
