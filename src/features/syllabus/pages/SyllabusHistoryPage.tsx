@@ -32,7 +32,7 @@ export const SyllabusHistoryPage = () => {
     );
   }
 
-  const syllabusesForYear = syllabusList.filter(s => s.academicYear === academicYear);
+  const syllabusesForYear = syllabusList.filter(s => s.programAcademicYear?.academicYear === academicYear || s.program.academicYears?.[0]?.academicYear === academicYear);
 
   return (
     <Box p={3}>
@@ -76,7 +76,7 @@ export const SyllabusHistoryPage = () => {
                   {syllabus.name}
                 </Typography>
                 <Typography color="textSecondary" gutterBottom>
-                  Academic Year: {syllabus.academicYear}
+                  Academic Year: {syllabus.programAcademicYear?.academicYear || syllabus.program.academicYears?.[0]?.academicYear}
                 </Typography>
                 <Typography variant="body2">
                   {syllabus.courses.length} Courses

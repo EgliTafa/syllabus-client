@@ -311,7 +311,7 @@ export const CreateCourse = () => {
                     </MenuItem>
                     {syllabusList?.map((syllabus) => (
                       <MenuItem key={syllabus.id} value={syllabus.id}>
-                        {syllabus.name} ({syllabus.academicYear})
+                        {syllabus.name} {syllabus.programAcademicYear ? `(${syllabus.programAcademicYear.academicYear})` : syllabus.program.academicYears?.[0] ? `(${syllabus.program.academicYears[0].academicYear})` : ''}
                       </MenuItem>
                     ))}
                   </TextField>

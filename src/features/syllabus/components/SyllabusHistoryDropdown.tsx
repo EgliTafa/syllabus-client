@@ -37,7 +37,7 @@ export const SyllabusHistoryDropdown = () => {
   };
 
   // Get unique academic years and sort them in ascending order
-  const academicYears = Array.from(new Set(syllabusList.map((s) => s.academicYear)))
+  const academicYears = Array.from(new Set(syllabusList.map((s) => s.programAcademicYear?.academicYear || s.program.academicYears?.[0]?.academicYear).filter(Boolean) as string[]))
     .sort((a, b) => {
       const yearA = parseInt(a.split('-')[0]);
       const yearB = parseInt(b.split('-')[0]);
@@ -72,7 +72,7 @@ export const SyllabusHistoryDropdown = () => {
         {academicYears.map((year) => (
           <MenuItem
             key={year}
-            onClick={() => handleYearClick(year)}
+            onClick={() => handleYearClick(year!)}
           >
             {year}
           </MenuItem>

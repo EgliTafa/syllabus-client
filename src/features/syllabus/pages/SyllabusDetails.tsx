@@ -59,7 +59,6 @@ export const SyllabusDetails = () => {
   
   const [editMode, setEditMode] = useState(false);
   const [newName, setNewName] = useState(selectedSyllabus?.name || '');
-  const [newAcademicYear, setNewAcademicYear] = useState(selectedSyllabus?.academicYear || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -96,7 +95,6 @@ export const SyllabusDetails = () => {
 
   const handleEditClick = () => {
     setNewName(selectedSyllabus?.name || '');
-    setNewAcademicYear(selectedSyllabus?.academicYear || '');
     setEditMode(true);
     setIsEditDialogOpen(true);
   };
@@ -115,8 +113,7 @@ export const SyllabusDetails = () => {
     try {
       await updateSyllabus({ 
         syllabusId: selectedSyllabus.id, 
-        name: newName,
-        academicYear: newAcademicYear
+        name: newName
       });
       fetchAndUpdateSyllabusById(selectedSyllabus.id);
       setEditMode(false);
@@ -135,7 +132,7 @@ export const SyllabusDetails = () => {
     setExportError(null);
     
     try {
-      const pdfBlob = await exportSyllabusPdf(selectedSyllabus.id);
+      const { blob: pdfBlob, filename } = await exportSyllabusPdf(selectedSyllabus);
       
       // Create a URL for the blob
       const url = window.URL.createObjectURL(pdfBlob);
@@ -143,7 +140,7 @@ export const SyllabusDetails = () => {
       // Create a temporary link element
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Syllabus_${selectedSyllabus.id}.pdf`;
+      link.download = filename;
       
       // Append to body, click, and remove
       document.body.appendChild(link);
@@ -424,10 +421,6 @@ export const SyllabusDetails = () => {
                 onChange={(e) => setNewName(e.target.value)}
                 required
               />
-              <AcademicYearSelect
-                value={newAcademicYear}
-                onChange={setNewAcademicYear}
-              />
             </Box>
           </DialogContent>
           <DialogActions>
@@ -436,7 +429,7 @@ export const SyllabusDetails = () => {
               onClick={handleEditSubmit} 
               variant="contained" 
               color="primary"
-              disabled={!newName || !newAcademicYear}
+              disabled={!newName}
             >
               {t('syllabusDetails.saveChanges')}
             </Button>
@@ -632,10 +625,13 @@ export const SyllabusDetails = () => {
         <Paper sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-              {selectedSyllabus.name} ({selectedSyllabus.academicYear})
+              {selectedSyllabus.name}
             </Typography>
-            <Typography variant="h6" color="textSecondary">
-              {t('syllabusDetails.studyProgram')}
+            <Typography variant="h6" color="textSecondary" gutterBottom>
+              {selectedSyllabus.program.name} {selectedSyllabus.programAcademicYear ? `(${selectedSyllabus.programAcademicYear.academicYear})` : selectedSyllabus.program.academicYears?.[0] ? `(${selectedSyllabus.program.academicYears[0].academicYear})` : ''}
+            </Typography>
+            <Typography variant="body1" color="textSecondary">
+              {selectedSyllabus.program.departmentName}
             </Typography>
             {isAddCourseDialogOpen && (
               <Alert severity="info" sx={{ mt: 2, maxWidth: 600, mx: 'auto' }}>
