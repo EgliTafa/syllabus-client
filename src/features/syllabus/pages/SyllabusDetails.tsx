@@ -208,7 +208,7 @@ export const SyllabusDetails = () => {
       const coursesResponse = await fetchAllCourses();
       
       // Convert courses from courses module format to syllabus module format
-      const convertedCourses: Course[] = coursesResponse.map(course => ({
+      const convertedCourses: Course[] = coursesResponse.courses.map(course => ({
         id: course.id,
         title: course.title,
         code: course.code,

@@ -121,6 +121,14 @@ export interface UpdateCourseRequest {
 }
 
 export interface ListAllCoursesResponse {
+  courses: Course[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  // Legacy property for backward compatibility
   allCourses: Course[];
 }
 

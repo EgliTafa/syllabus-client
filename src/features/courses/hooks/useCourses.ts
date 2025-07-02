@@ -4,6 +4,7 @@ import { RootState } from "../../../app/store";
 import {
   setSelectedCourse,
   setCourseList,
+  setPaginatedCourseList,
   setIsFetching,
   setError,
 } from "../state/courseSlice";
@@ -15,6 +16,7 @@ import {
   deleteCourse,
   addCourseDetails,
   updateCourseDetails,
+  CourseListParams,
 } from "../core/_requests";
 import { Course, CreateCourseRequest, UpdateCourseRequest, CourseDetail } from "../core/_models";
 
@@ -23,19 +25,36 @@ interface CourseState {
   courseList: Course[];
   isFetching: boolean;
   error: string | null;
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export const useCourses = () => {
   const dispatch = useDispatch();
-  const { selectedCourse, courseList, isFetching, error } = useSelector(
+  const { 
+    selectedCourse, 
+    courseList, 
+    isFetching, 
+    error,
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage
+  } = useSelector(
     (state: RootState) => state.course as CourseState
   );
 
-  const loadCourses = useCallback(async () => {
+  const loadCourses = useCallback(async (params?: CourseListParams) => {
     try {
       dispatch(setIsFetching(true));
-      const courses = await fetchAllCourses();
-      dispatch(setCourseList(courses));
+      const response = await fetchAllCourses(params);
+      dispatch(setPaginatedCourseList(response));
       dispatch(setError(null));
     } catch (err) {
       dispatch(setError(err instanceof Error ? err.message : "Failed to load courses"));
@@ -178,6 +197,12 @@ export const useCourses = () => {
     courseList,
     isFetching,
     error,
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
     loadCourses,
     loadCourseById,
     createNewCourse,
