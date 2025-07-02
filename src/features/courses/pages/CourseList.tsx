@@ -44,13 +44,18 @@ export const CourseList = () => {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    loadCourses({
-      page,
-      pageSize,
-      sortBy,
-      sortDirection,
-      searchTerm: searchTerm || undefined
-    });
+    // Only search if term has 3+ characters or is empty (to clear search)
+    const shouldSearch = searchTerm.length === 0 || searchTerm.length >= 3;
+    
+    if (shouldSearch) {
+      loadCourses({
+        page,
+        pageSize,
+        sortBy,
+        sortDirection,
+        searchTerm: searchTerm || undefined
+      });
+    }
   }, [loadCourses, page, pageSize, sortBy, sortDirection, searchTerm]);
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
@@ -87,7 +92,7 @@ export const CourseList = () => {
 
   // Use safe fallback values to avoid NaN
   const safeCurrentPage = currentPage || 1;
-  const safePageSize = pageSize || 10;
+  const safePageSize = pageSize || 12;
   const safeTotalCount = totalCount || 0;
 
   const startItem = safeTotalCount === 0 ? 0 : (safeCurrentPage - 1) * safePageSize + 1;

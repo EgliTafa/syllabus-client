@@ -22,7 +22,7 @@ const initialState: CourseState = {
   error: null,
   totalCount: 0,
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 12,
   totalPages: 0,
   hasNextPage: false,
   hasPreviousPage: false,
