@@ -33,7 +33,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch } from 'react-redux';
-import { Course } from '../core/_models';
+import { Course, ListAllCoursesResponse } from '../../courses/core/_models';
 import { updateSyllabus, exportSyllabusPdf, addOrRemoveCoursesFromSyllabus, deleteSyllabus } from '../core/_requests';
 import { AcademicYearSelect } from '../components/AcademicYearSelect';
 import { CourseSelectionDialog } from '../components/CourseSelectionDialog';
@@ -205,10 +205,10 @@ export const SyllabusDetails = () => {
   const fetchAvailableCourses = async () => {
     setIsLoadingCourses(true);
     try {
-      const coursesResponse = await fetchAllCourses();
+      const coursesResponse: ListAllCoursesResponse = await fetchAllCourses();
       
       // Convert courses from courses module format to syllabus module format
-      const convertedCourses: Course[] = coursesResponse.map(course => ({
+      const convertedCourses: Course[] = coursesResponse.courses.map((course: Course) => ({
         id: course.id,
         title: course.title,
         code: course.code,
@@ -649,7 +649,7 @@ export const SyllabusDetails = () => {
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.year')} {year}:</Typography>
                 {Object.entries(semesters).map(([semester, semesterData]) => (
                   <Typography key={semester} variant="body2" sx={{ ml: 2 }}>
-                    {t('syllabusDetails.semester')} {semester}: {semesterData.credits} {t('syllabusDetails.credits')}, {semesterData.lecture} {t('syllabusDetails.lecture')}, {semesterData.seminar} {t('syllabusDetails.seminar')}, {semesterData.lab} {t('syllabusDetails.lab')}, {semesterData.practice} {t('syllabusDetails.practice')}, {semesterData.total} {t('syllabusDetails.totalHours')}
+                    {t('syllabusDetails.semester')} {semester}: {semesterData.credits} {t('syllabusDetails.credits')}, {semesterData.lecture} {t('syllabusDetails.lecture')}, {semesterData.seminar} {t('syllabusDetails.seminar')}, {semesterData.lab} {t('syllabusDetails.lab')}, {semesterData.total} {t('syllabusDetails.totalHours')}
                   </Typography>
                 ))}
                 <Typography variant="body2" sx={{ ml: 2, fontWeight: 'bold' }}>
@@ -658,7 +658,7 @@ export const SyllabusDetails = () => {
               </Box>
             ))}
             <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1 }}>
-              {t('syllabusDetails.overall')}: {overall.credits} {t('syllabusDetails.credits')}, {overall.lecture} {t('syllabusDetails.lecture')}, {overall.seminar} {t('syllabusDetails.seminar')}, {overall.lab} {t('syllabusDetails.lab')}, {overall.practice} {t('syllabusDetails.practice')}, {overall.total} {t('syllabusDetails.totalHours')}
+              {t('syllabusDetails.overall')}: {overall.credits} {t('syllabusDetails.credits')}, {overall.lecture} {t('syllabusDetails.lecture')}, {overall.seminar} {t('syllabusDetails.seminar')}, {overall.lab} {t('syllabusDetails.lab')}, {overall.total} {t('syllabusDetails.totalHours')}
             </Typography>
           </Box>
 
@@ -690,8 +690,6 @@ export const SyllabusDetails = () => {
                             <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.seminar')}</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.lab')}</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.total')}</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.practice')}</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.yearlyTotal')}</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.credits')}</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>{t('syllabusDetails.evaluationMethod')}</TableCell>
                           </TableRow>
@@ -702,9 +700,7 @@ export const SyllabusDetails = () => {
                             const le = course.lectureHours || 0;
                             const se = course.seminarHours || 0;
                             const lab = course.labHours || 0;
-                            const praktik = course.practiceHours || 0;
                             const totali = le + se + lab;
-                            const totaliVjetor = totali + praktik;
                             const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                             return (
                               <TableRow
@@ -728,8 +724,6 @@ export const SyllabusDetails = () => {
                                 <TableCell>{se}</TableCell>
                                 <TableCell>{lab}</TableCell>
                                 <TableCell>{totali}</TableCell>
-                                <TableCell>{praktik}</TableCell>
-                                <TableCell>{totaliVjetor}</TableCell>
                                 <TableCell>{course.credits}</TableCell>
                                 <TableCell>{course.examMethod || 'P'}</TableCell>
                               </TableRow>
@@ -738,7 +732,7 @@ export const SyllabusDetails = () => {
                           {/* Lëndë me zgjedhje group */}
                           {electives.length > 0 && (
                             <TableRow>
-                              <TableCell colSpan={11} style={{ background: '#f3e5f5', fontWeight: 'bold' }}>
+                              <TableCell colSpan={9} style={{ background: '#f3e5f5', fontWeight: 'bold' }}>
                                 {t('syllabusDetails.electiveCourses')}
                               </TableCell>
                             </TableRow>
@@ -746,7 +740,7 @@ export const SyllabusDetails = () => {
                           {/* Show Elective I if present */}
                           {electivesI.length > 0 && (
                             <TableRow>
-                              <TableCell colSpan={11} style={{ background: '#e3f2fd', fontWeight: 'bold' }}>
+                              <TableCell colSpan={9} style={{ background: '#e3f2fd', fontWeight: 'bold' }}>
                                 {t('syllabusDetails.electiveI')}
                               </TableCell>
                             </TableRow>
@@ -755,9 +749,7 @@ export const SyllabusDetails = () => {
                             const le = course.lectureHours || 0;
                             const se = course.seminarHours || 0;
                             const lab = course.labHours || 0;
-                            const praktik = course.practiceHours || 0;
                             const totali = le + se + lab;
-                            const totaliVjetor = totali + praktik;
                             const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                             return (
                               <TableRow
@@ -781,8 +773,6 @@ export const SyllabusDetails = () => {
                                 <TableCell>{se}</TableCell>
                                 <TableCell>{lab}</TableCell>
                                 <TableCell>{totali}</TableCell>
-                                <TableCell>{praktik}</TableCell>
-                                <TableCell>{totaliVjetor}</TableCell>
                                 <TableCell>{course.credits}</TableCell>
                                 <TableCell>{course.examMethod || 'P'}</TableCell>
                               </TableRow>
@@ -791,7 +781,7 @@ export const SyllabusDetails = () => {
                           {/* Show Elective II if present */}
                           {electivesII.length > 0 && (
                             <TableRow>
-                              <TableCell colSpan={11} style={{ background: '#fff3e0', fontWeight: 'bold' }}>
+                              <TableCell colSpan={9} style={{ background: '#fff3e0', fontWeight: 'bold' }}>
                                 {t('syllabusDetails.electiveII')}
                               </TableCell>
                             </TableRow>
@@ -800,9 +790,7 @@ export const SyllabusDetails = () => {
                             const le = course.lectureHours || 0;
                             const se = course.seminarHours || 0;
                             const lab = course.labHours || 0;
-                            const praktik = course.practiceHours || 0;
                             const totali = le + se + lab;
-                            const totaliVjetor = totali + praktik;
                             const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                             return (
                               <TableRow
@@ -826,8 +814,6 @@ export const SyllabusDetails = () => {
                                 <TableCell>{se}</TableCell>
                                 <TableCell>{lab}</TableCell>
                                 <TableCell>{totali}</TableCell>
-                                <TableCell>{praktik}</TableCell>
-                                <TableCell>{totaliVjetor}</TableCell>
                                 <TableCell>{course.credits}</TableCell>
                                 <TableCell>{course.examMethod || 'P'}</TableCell>
                               </TableRow>
@@ -838,9 +824,7 @@ export const SyllabusDetails = () => {
                             const le = course.lectureHours || 0;
                             const se = course.seminarHours || 0;
                             const lab = course.labHours || 0;
-                            const praktik = course.practiceHours || 0;
                             const totali = le + se + lab;
-                            const totaliVjetor = totali + praktik;
                             const isMarkedForRemoval = localCoursesToRemove.includes(course.id);
                             return (
                               <TableRow
@@ -864,8 +848,6 @@ export const SyllabusDetails = () => {
                                 <TableCell>{se}</TableCell>
                                 <TableCell>{lab}</TableCell>
                                 <TableCell>{totali}</TableCell>
-                                <TableCell>{praktik}</TableCell>
-                                <TableCell>{totaliVjetor}</TableCell>
                                 <TableCell>{course.credits}</TableCell>
                                 <TableCell>{course.examMethod || 'P'}</TableCell>
                               </TableRow>
