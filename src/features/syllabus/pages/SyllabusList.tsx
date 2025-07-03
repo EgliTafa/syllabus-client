@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -6,16 +6,16 @@ import {
   Card, 
   CardContent, 
   Typography, 
-  Grid,
   CircularProgress,
   TextField,
   MenuItem,
   FormControl,
   InputLabel,
   Select,
-  Paper
+  Paper,
+  Pagination
 } from '@mui/material';
-import { useGetAllSyllabuses } from '../hooks/useSyllabuses';
+import { useSyllabuses } from '../hooks/useSyllabuses';
 import { useDepartments } from '../../departments/hooks/useDepartments';
 import { usePrograms } from '../../programs/hooks/usePrograms';
 import { Syllabus } from '../core/_models';
@@ -26,7 +26,17 @@ import { useTranslation } from 'react-i18next';
 export const SyllabusList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { syllabusList, isFetching, fetchAndUpdateSyllabuses } = useGetAllSyllabuses();
+  const { 
+    syllabusList, 
+    isFetching, 
+    loadSyllabuses,
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage
+  } = useSyllabuses();
   const { departments, isLoading: departmentsLoading } = useDepartments();
   const { programs, isLoading: programsLoading } = usePrograms();
   const { t } = useTranslation();
@@ -35,13 +45,33 @@ export const SyllabusList = () => {
   const [departmentFilter, setDepartmentFilter] = useState<string>('');
   const [programFilter, setProgramFilter] = useState<string>('');
   const [academicYearFilter, setAcademicYearFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
-    fetchAndUpdateSyllabuses(dispatch);
-  }, [dispatch]);
-
-  // Debug: Log programs to check academicYear values
-  console.log('Programs loaded for academic year filter:', programs);
+    loadSyllabuses({
+      page,
+      pageSize,
+      sortBy,
+      sortDirection,
+      searchTerm: debouncedSearchTerm || undefined,
+      departmentId: departmentFilter ? parseInt(departmentFilter) : undefined,
+      programId: programFilter ? parseInt(programFilter) : undefined,
+      academicYear: academicYearFilter || undefined
+    });
+  }, [loadSyllabuses, page, pageSize, sortBy, sortDirection, debouncedSearchTerm, departmentFilter, programFilter, academicYearFilter]);
 
   // Get unique academic years from all programs' academic years
   const academicYears = useMemo(() => {
@@ -57,16 +87,14 @@ export const SyllabusList = () => {
     return years;
   }, [programs]);
 
-  // Filter syllabuses based on selected filters
-  const filteredSyllabuses = useMemo(() => {
-    return syllabusList.filter(syllabus => {
-      const matchesDepartment = !departmentFilter || syllabus.program.departmentId.toString() === departmentFilter;
-      const matchesProgram = !programFilter || syllabus.program.id.toString() === programFilter;
-      const matchesAcademicYear = !academicYearFilter || syllabus.programAcademicYear?.academicYear === academicYearFilter || syllabus.program.academicYears?.[0]?.academicYear === academicYearFilter;
-      
-      return matchesDepartment && matchesProgram && matchesAcademicYear;
-    });
-  }, [syllabusList, departmentFilter, programFilter, academicYearFilter]);
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [departmentFilter, programFilter, academicYearFilter, debouncedSearchTerm, sortBy, sortDirection]);
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
 
   // Get programs filtered by selected department
   const filteredPrograms = useMemo(() => {
@@ -81,6 +109,14 @@ export const SyllabusList = () => {
       </Box>
     );
   }
+
+  // Use safe fallback values to avoid NaN
+  const safeCurrentPage = currentPage || 1;
+  const safePageSize = pageSize || 12;
+  const safeTotalCount = totalCount || 0;
+
+  const startItem = safeTotalCount === 0 ? 0 : (safeCurrentPage - 1) * safePageSize + 1;
+  const endItem = safeTotalCount === 0 ? 0 : Math.min(safeCurrentPage * safePageSize, safeTotalCount);
 
   return (
     <Box p={3}>
@@ -100,7 +136,15 @@ export const SyllabusList = () => {
         <Typography variant="h6" gutterBottom>
           Filters
         </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2 }}>
+          <TextField
+            fullWidth
+            label="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search syllabuses..."
+            size="small"
+          />
           <FormControl fullWidth>
             <InputLabel shrink>Department</InputLabel>
             <Select
@@ -162,6 +206,7 @@ export const SyllabusList = () => {
           <Button
             variant="outlined"
             onClick={() => {
+              setSearchTerm('');
               setDepartmentFilter('');
               setProgramFilter('');
               setAcademicYearFilter('');
@@ -175,51 +220,71 @@ export const SyllabusList = () => {
 
       {/* Results count */}
       <Typography variant="body2" color="textSecondary" mb={2}>
-        Showing {filteredSyllabuses.length} of {syllabusList.length} syllabuses
+        {t('courseList.showingResults', { 
+          start: startItem, 
+          end: endItem, 
+          total: safeTotalCount 
+        }) || `Showing ${startItem}-${endItem} of ${safeTotalCount} syllabuses`}
       </Typography>
 
-      <Grid container spacing={3}>
-        {filteredSyllabuses?.map((syllabus) => (
-          <Grid 
+      <Box 
+        sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)'
+          },
+          gap: 3,
+          mb: 3
+        }}
+      >
+        {(syllabusList || []).map((syllabus) => (
+          <Card 
             key={syllabus.id}
-            sx={{
-              width: {
-                xs: '100%',
-                sm: '50%',
-                md: '33.33%'
-              },
-              p: 1
+            sx={{ 
+              height: '100%',
+              cursor: 'pointer',
+              '&:hover': {
+                boxShadow: 6
+              }
             }}
+            onClick={() => navigate(`/syllabus/${syllabus.id}`)}
           >
-            <Card 
-              sx={{ 
-                cursor: 'pointer',
-                '&:hover': {
-                  boxShadow: 6
-                }
-              }}
-              onClick={() => navigate(`/syllabus/${syllabus.id}`)}
-            >
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {syllabus.name}
-                </Typography>
-                <Typography color="textSecondary" gutterBottom>
-                  {syllabus.program.name} {syllabus.programAcademicYear ? `(${syllabus.programAcademicYear.academicYear})` : syllabus.program.academicYears?.[0] ? `(${syllabus.program.academicYears[0].academicYear})` : ''}
-                </Typography>
-                <Typography variant="body2" color="textSecondary" gutterBottom>
-                  {syllabus.program.departmentName}
-                </Typography>
-                <Typography color="textSecondary">
-                  {t('syllabusList.courses', { count: syllabus.courses.length })}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                {syllabus.name}
+              </Typography>
+              <Typography color="textSecondary" gutterBottom>
+                {syllabus.program.name} {syllabus.programAcademicYear ? `(${syllabus.programAcademicYear.academicYear})` : syllabus.program.academicYears?.[0] ? `(${syllabus.program.academicYears[0].academicYear})` : ''}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                {syllabus.program.departmentName}
+              </Typography>
+              <Typography color="textSecondary">
+                {t('syllabusList.courses', { count: syllabus.courses.length })}
+              </Typography>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
 
-      {filteredSyllabuses.length === 0 && (
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" mt={3}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
+
+      {syllabusList.length === 0 && (
         <Box textAlign="center" py={4}>
           <Typography variant="h6" color="textSecondary">
             No syllabuses found matching the selected filters.

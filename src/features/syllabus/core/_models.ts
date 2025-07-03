@@ -95,5 +95,24 @@ export interface AddOrRemoveCoursesFromSyllabusRequest {
 
 export interface ListAllSyllabusesResponse {
   syllabuses: Syllabus[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  // Legacy property for backward compatibility
+  allSyllabuses: Syllabus[];
+}
+
+export interface SyllabusListParams {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  searchTerm?: string;
+  departmentId?: number;
+  programId?: number;
+  academicYear?: string;
 }
   
