@@ -38,33 +38,56 @@ export interface CourseDetail {
   skillsAcquired: string;
   courseResponsible?: string;
   topics?: Topic[];
+  literature?: string; // Backend support coming soon
 }
 
 export interface Course {
   id: number;
   title: string;
   code: string;
+  year: number;
   semester: number;
+  credits: number;
   lectureHours: number;
   seminarHours: number;
   labHours: number;
-  credits: number;
-  evaluation: EvaluationMethod;
-  type: CourseType;
+  practiceHours: number;
+  evaluation?: EvaluationMethod;
+  type?: CourseType;
+  electiveGroup?: string | null;
+  // Flat API fields (optional)
+  courseTypeLabel?: string;
+  examMethod?: string;
+  teachingPlan?: TeachingPlan;
+  ethicsCode?: string;
+  teachingFormat?: string;
+  language?: string;
+  academicProgram?: string;
+  academicYear?: string;
+  courseResponsible?: string;
+  objective?: string;
+  keyConcepts?: string;
+  prerequisites?: string;
+  skillsAcquired?: string;
+  evaluationBreakdown?: EvaluationBreakdown;
+  topics?: Topic[];
+  // Nested detail (for compatibility)
   detail?: CourseDetail;
 }
 
 export enum EvaluationMethod {
   Exam = 'Exam',
-  Project = 'Project',
-  Assignment = 'Assignment',
-  Combined = 'Combined'
+  ContinuousAssessment = 'ContinuousAssessment',
+  Pass = 'Pass',
+  DiplomaExam = 'DiplomaExam'
 }
 
 export enum CourseType {
   Mandatory = 'Mandatory',
+  Advanced = 'Advanced',
+  Specialized = 'Specialized',
   Elective = 'Elective',
-  Optional = 'Optional'
+  FinalProject = 'FinalProject'
 }
 
 export interface CreateCourseRequest {
@@ -74,10 +97,13 @@ export interface CreateCourseRequest {
   lectureHours: number;
   seminarHours: number;
   labHours: number;
+  practiceHours: number;
   credits: number;
   evaluation: EvaluationMethod;
   type: CourseType;
   syllabusId: number;
+  year: number;
+  electiveGroup?: string;
   detail?: CourseDetail;
 }
 
@@ -95,6 +121,14 @@ export interface UpdateCourseRequest {
 }
 
 export interface ListAllCoursesResponse {
+  courses: Course[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  // Legacy property for backward compatibility
   allCourses: Course[];
 }
 

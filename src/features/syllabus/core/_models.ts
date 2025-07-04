@@ -1,63 +1,118 @@
-export interface Topic {
-  title: string;
-  hours: number;
-  reference?: string;
+import { TeachingPlan, EvaluationBreakdown, Topic } from '../../courses/core/_models';
+
+export interface Department {
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Program {
+  id: number;
+  name: string;
+  description: string;
+  departmentId: number;
+  departmentName: string;
+  createdAt: string;
+  updatedAt?: string;
+  academicYears: ProgramAcademicYear[];
+}
+
+export interface ProgramAcademicYear {
+  id: number;
+  academicYear: string;
 }
 
 export interface Course {
     id: number;
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
+  lectureHours: number;
+  seminarHours: number;
+  labHours: number;
+  practiceHours: number;
+  courseTypeLabel?: string;
+  examMethod?: string;
   academicProgram?: string;
   academicYear?: string;
   language?: string;
-  courseTypeLabel?: string;
   ethicsCode?: string;
-  examMethod?: string;
   teachingFormat?: string;
-  teachingPlan?: any; // TODO: Define proper type
-  evaluationBreakdown?: any; // TODO: Define proper type
+  teachingPlan?: TeachingPlan;
+  evaluationBreakdown?: EvaluationBreakdown;
   objective?: string;
   keyConcepts?: string;
   prerequisites?: string;
   skillsAcquired?: string;
   courseResponsible?: string;
   topics?: Topic[];
+  electiveGroup?: string | null; // 'Elective I', 'Elective II', or null
 }
 
 export interface Syllabus {
     id: number;
     name: string;
-  courses: Course[];
-  }
+    program: Program;
+    programAcademicYear?: ProgramAcademicYear;
+    courses: Course[];
+}
   
 export interface CreateSyllabusRequest {
     name: string;
-  courses: CreateCourseRequest[];
-  }
+    programAcademicYearId: number;
+    courses: CreateCourseRequest[];
+}
   
 export interface CreateCourseRequest {
   title: string;
   code: string;
+  year: number;
   semester: number;
   credits: number;
-  // Add other fields as needed
-  }
+  lectureHours: number;
+  seminarHours: number;
+  labHours: number;
+  practiceHours: number;
+  courseTypeLabel?: string;
+  examMethod?: string;
+  electiveGroup?: string | null; // 'Elective I', 'Elective II', or null
+}
   
 export interface UpdateSyllabusRequest {
     syllabusId: number;
     name: string;
-  }
+}
   
 export interface AddOrRemoveCoursesFromSyllabusRequest {
     syllabusId: number;
     courseIdsToAdd: number[];
     courseIdsToRemove: number[];
-  }
+}
 
 export interface ListAllSyllabusesResponse {
   syllabuses: Syllabus[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  // Legacy property for backward compatibility
+  allSyllabuses: Syllabus[];
+}
+
+export interface SyllabusListParams {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  searchTerm?: string;
+  departmentId?: number;
+  programId?: number;
+  academicYear?: string;
 }
   

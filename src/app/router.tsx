@@ -2,15 +2,23 @@ import { createBrowserRouter } from 'react-router-dom';
 import { SyllabusList } from '../features/syllabus/pages/SyllabusList';
 import { SyllabusDetails } from '../features/syllabus/pages/SyllabusDetails';
 import { CreateSyllabus } from '../features/syllabus/pages/CreateSyllabus';
+import { SyllabusHistoryPage } from '../features/syllabus/pages/SyllabusHistoryPage';
 import { CourseList } from '../features/courses/pages/CourseList';
 import { CourseDetails } from '../features/courses/pages/CourseDetails';
 import { CreateCourse } from '../features/courses/pages/CreateCourse';
 import { MainLayout } from './layouts/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { PublicRoute } from './components/PublicRoute';
 import { Login } from '../features/auth/pages/Login';
 import { Register } from '../features/auth/pages/Register';
 import { ForgotPassword } from '../features/auth/pages/ForgotPassword';
 import { ResetPassword } from '../features/auth/pages/ResetPassword';
+import { RoleGuard } from '../features/auth/components/RoleGuard';
+import { UnauthorizedPage } from '../features/auth/pages/UnauthorizedPage';
+import { UserRole } from '../features/auth/core/_models';
+import { AdminManagementPage } from '../features/admin/pages/AdminManagementPage';
+import { UserProfile } from '../features/auth/pages/UserProfile';
+import { PingPage } from '../features/ping/pages/PingPage';
 
 export const router = createBrowserRouter([
   {
@@ -21,7 +29,9 @@ export const router = createBrowserRouter([
         index: true,
         element: (
           <ProtectedRoute>
-            <SyllabusList />
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <SyllabusList />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
@@ -29,7 +39,19 @@ export const router = createBrowserRouter([
         path: 'syllabus',
         element: (
           <ProtectedRoute>
-            <SyllabusList />
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <SyllabusList />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'syllabus/history/:academicYear',
+        element: (
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <SyllabusHistoryPage />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
@@ -37,7 +59,9 @@ export const router = createBrowserRouter([
         path: 'syllabus/:syllabusId',
         element: (
           <ProtectedRoute>
-            <SyllabusDetails />
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <SyllabusDetails />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
@@ -45,7 +69,9 @@ export const router = createBrowserRouter([
         path: 'syllabus/create',
         element: (
           <ProtectedRoute>
-            <CreateSyllabus />
+            <RoleGuard allowedRoles={[UserRole.Professor, UserRole.Administrator]}>
+              <CreateSyllabus />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
@@ -53,7 +79,9 @@ export const router = createBrowserRouter([
         path: 'courses',
         element: (
           <ProtectedRoute>
-            <CourseList />
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <CourseList />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
@@ -61,7 +89,9 @@ export const router = createBrowserRouter([
         path: 'courses/:courseId',
         element: (
           <ProtectedRoute>
-            <CourseDetails />
+            <RoleGuard allowedRoles={[UserRole.Student, UserRole.Professor, UserRole.Administrator]}>
+              <CourseDetails />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
@@ -69,17 +99,37 @@ export const router = createBrowserRouter([
         path: 'courses/create',
         element: (
           <ProtectedRoute>
-            <CreateCourse />
+            <RoleGuard allowedRoles={[UserRole.Professor, UserRole.Administrator]}>
+              <CreateCourse />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'ping',
+        element: (
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Administrator]}>
+              <PingPage />
+            </RoleGuard>
           </ProtectedRoute>
         ),
       },
       {
         path: 'login',
-        element: <Login />,
+        element: (
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        ),
       },
       {
         path: 'register',
-        element: <Register />,
+        element: (
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        ),
       },
       {
         path: 'forgot-password',
@@ -88,6 +138,28 @@ export const router = createBrowserRouter([
       {
         path: 'reset-password',
         element: <ResetPassword />,
+      },
+      {
+        path: 'unauthorized',
+        element: <UnauthorizedPage />,
+      },
+      {
+        path: 'admin',
+        element: (
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={[UserRole.Administrator]}>
+              <AdminManagementPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

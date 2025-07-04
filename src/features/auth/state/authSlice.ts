@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../core/_models';
+import { AuthInitializer } from '../core/AuthInitializer';
 
 export interface AuthState {
   user: User | null;
@@ -8,12 +9,7 @@ export interface AuthState {
   error: string | null;
 }
 
-const initialState: AuthState = {
-  user: null,
-  isAuthenticated: false,
-  isFetching: false,
-  error: null,
-};
+const initialState: AuthState = AuthInitializer.loadInitialState();
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -22,17 +18,22 @@ export const authSlice = createSlice({
     setUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
+      state.error = null;
+      AuthInitializer.saveAuthState(state);
     },
     setIsFetching: (state, action: PayloadAction<boolean>) => {
       state.isFetching = action.payload;
+      AuthInitializer.saveAuthState(state);
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
+      AuthInitializer.saveAuthState(state);
     },
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
+      AuthInitializer.clearAuthState();
     },
   },
 });

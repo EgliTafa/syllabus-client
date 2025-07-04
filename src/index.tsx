@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import './utils/i18n';
 
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { theme as lightTheme } from "./theme";
