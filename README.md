@@ -489,10 +489,10 @@ This project is now **complete** and ready for production use. For future enhanc
 ## 👨‍💻 Author
 
 **E. T.**  
-Junior .NET & React Developer  
+Intermediate .NET & React Developer  
 GitHub: [@EgliTafa](https://github.com/EgliTafa)
 
-**Project Completion Date**: December 2024
+**Project Completion Date**: July 2025
 
 ---
 
